@@ -14,12 +14,12 @@
 
 void assertSizes();
 
-int main(void){
+int main(int argv, char ** argc){
 	//Probamos que la arquitectura esta configurada correctamente.
 	assertSizes();
 
 
-	newWavFromPath("8k16bitpcm.wav");
+	newWavFromPath(argc[1]);
 
 
 	return 0;

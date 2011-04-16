@@ -41,7 +41,12 @@ static wav_t loadWav(FILE *source){
 		return NULL;
 	}
 
-	return wavParser(wav, source);
+	wav = wavParser(wav, source);
+	if (wav == NULL) {
+		LOG("Dio mal!\n");
+	} else {
+		LOG("Dio Bien!\n");
+	}
 }
 
 wav_t newWavFromData(FMT_CK* fmt_ck, BYTE* data, long dataSize) {
