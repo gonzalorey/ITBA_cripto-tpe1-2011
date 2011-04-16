@@ -12,7 +12,7 @@ int parseRiff (CKID	chunkID, CKSIZE	chunkSize, CKID	format);
 int parseFMK (CKID	chunkID, CKSIZE	chunkSize, WORD	wFormatTag, WORD wChannels, WORD wBitsPerSample);
 int parseData (CKID	chunkID);
 
-int wavParser (FILE * source) {
+wav_t wavParser (wav_t wav, FILE * source) {
 	RIFF_CK riff;
 	FMT_CK fmt;
 	DATA_CK data;
@@ -42,7 +42,10 @@ int wavParser (FILE * source) {
 	if (!parseData(data.chunkID)) {
 		return 0;
 	}
-	return 1;
+	setData(wav, data);
+	setFMT(wav, fmt);
+	setRiff(wav, riff);
+	return wav;
 }
 
 int parseRiff (CKID	chunkID, CKSIZE	chunkSize, CKID	format) {

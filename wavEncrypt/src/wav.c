@@ -36,7 +36,12 @@ wav_t newWavFromPath(char *filepath){
 static wav_t loadWav(FILE *source){
 	LOG("load wav\n");
 
-	return wavParser(source);
+	wav_t wav;
+	if ((wav = malloc(sizeof(struct wavCDT))) == NULL) {
+		return NULL;
+	}
+
+	return wavParser(wav, source);
 }
 
 wav_t newWavFromData(FMT_CK* fmt_ck, BYTE* data, long dataSize) {
@@ -137,3 +142,28 @@ FMT_CK * wavGetFmt(wav_t wav) {
 	fmt_ckCopy->extraParams = extraParamsCopy;
 	return fmt_ckCopy;
 }
+
+void setFMT (wav_t wav, FMT_CK fmt) {
+	wav->fmt = fmt;
+}
+
+void setRiff (wav_t wav, RIFF_CK riff) {
+	wav->riff_desc = riff;
+}
+
+void setData (wav_t wav, DATA_CK data) {
+	wav->data = data;
+}
+
+FMT_CK getFMT (wav_t wav) {
+	return wav->fmt;
+}
+
+RIFF_CK getRiff (wav_t wav) {
+	return wav->riff_desc;
+}
+
+DATA_CK getData (wav_t wav) {
+	return wav->data;
+}
+
