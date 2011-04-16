@@ -12,22 +12,6 @@
 #include "types.h"
 #include "debug.h"
 
-#define RIFF_CKID 0x52494646
-#define DATA_CKID 0x64617461
-#define	RIFF_FORMAT 0x57415645
-
-typedef struct {
-	CKID	chunkID;
-	CKSIZE	chunkSize;
-	CKID	format;
-} RIFF_CK;
-
-typedef struct {
-	CKID	chunkID;
-	CKSIZE	chunkSize;
-	BYTE	*soundData;
-} DATA_CK;
-
 struct wavCDT {
 	RIFF_CK	riff_desc;
 	FMT_CK	fmt;
@@ -52,39 +36,18 @@ wav_t newWavFromPath(char *filepath){
 static wav_t loadWav(FILE *source){
 	LOG("load wav\n");
 
-	wav_t wav;
-
-	if((wav = malloc(sizeof(struct wavCDT))) == NULL) {
-		return NULL;
-	}
-
-	CKID ckId;
-	int bytes;
-	if ((bytes = fread(&ckId, sizeof(DWORD), 1, source)) == 0){
-		FATAL("Cantidad de bytes leidos: %d\n", bytes);
-		return NULL;
-	}
-
-	char c1, c2, c3, c4;
-	c1 = ((char*)&ckId)[0];
-	c2 = ((char*)&ckId)[1];
-	c3 = ((char*)&ckId)[2];
-	c4 = ((char*)&ckId)[3];
-
-	LOG("ckId: %c%c%c%c\n", c1, c2, c3, c4);
-
-	return NULL;
+	return wavParser(source);
 }
 
 wav_t newWavFromData(FMT_CK* fmt_ck, BYTE* data, long dataSize) {
-	RIFF_CK newRiff_ck = malloc(sizeof(RIFF_CK));
+	RIFF_CK * newRiff_ck = malloc(sizeof(RIFF_CK));
 	if (newRiff_ck == NULL) {
 		return NULL;
 	}
-	newRiff_ck.chunkID = RIFF_ID;
-	//newRiff_ck.chunkSize = 		// TODO
-	newRiff_ck.format = RIFF_FORMAT;
-	FMT_CK newFmt_ck = malloc(sizeof(FMT_CK));
+	newRiff_ck->chunkID = RIFF_CKID;
+	//newRiff_ck->chunkSize = 		// TODO
+	newRiff_ck->format = RIFF_FORMAT;
+	FMT_CK * newFmt_ck = malloc(sizeof(FMT_CK));
 	if (newFmt_ck == NULL) {
 		return NULL;
 	}
@@ -93,27 +56,27 @@ wav_t newWavFromData(FMT_CK* fmt_ck, BYTE* data, long dataSize) {
 	if (newRiff_ck == NULL) {
 		return NULL;
 	}
-	memcpy(extraParams, fmt_ck->extraParam, sizeof(fmt_ck->extraParam));
-	newFmt_ck.extraParams = extraParams;
-	DATA_CK newData = malloc(sizeof(DATA_CK));
+	memcpy(extraParams, fmt_ck->extraParams, sizeof(fmt_ck->extraParams));
+	newFmt_ck->extraParams = extraParams;
+	DATA_CK * newData = malloc(sizeof(DATA_CK));
 	if (newData == NULL) {
 		return NULL;
 	}
-	newData.soundData = malloc(dataSize);
-	if (newData.soundData == NULL) {
+	newData->soundData = malloc(dataSize);
+	if (newData->soundData == NULL) {
 		return NULL;
 	}
-	memcpy(newData.soundData, data, dataSize);
-	newData.chunkID = DATA_CKID;
-	newData.chunkSize = dataSize;
+	memcpy(newData->soundData, data, dataSize);
+	newData->chunkID = DATA_CKID;
+	newData->chunkSize = dataSize;
 
 	wav_t wav = malloc(sizeof(struct wavCDT));
 	if (wav == NULL) {
 		return NULL;
 	}
-	wav.riff_desc = newRiff_ck;
-	wav.fmt = newFmt_ck;
-	wav.data = newData;
+	wav->riff_desc = *newRiff_ck;
+	wav->fmt = *newFmt_ck;
+	wav->data = *newData;
 
 	return wav;
 }

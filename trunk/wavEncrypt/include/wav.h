@@ -22,6 +22,18 @@ typedef struct {
 	BYTE	*extraParams;//space for extra params
 }FMT_CK;
 
+typedef struct {
+	CKID	chunkID;
+	CKSIZE	chunkSize;
+	CKID	format;
+} RIFF_CK;
+
+typedef struct {
+	CKID	chunkID;
+	CKSIZE	chunkSize;
+	BYTE	*soundData;
+} DATA_CK;
+
 typedef struct wavCDT *wav_t;
 
 /**
