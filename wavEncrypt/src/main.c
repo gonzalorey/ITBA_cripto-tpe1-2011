@@ -15,7 +15,7 @@
 void assertSizes();
 
 int main(void){
-	//Probamos que la arquitectura est‡ configurada correctamente.
+	//Probamos que la arquitectura esta configurada correctamente.
 	assertSizes();
 
 
@@ -25,9 +25,10 @@ int main(void){
 	return 0;
 
 }
+
 /**
- * Checkea que los tama–os de los tipos definidos sean realmente los que
- * deber’an ser. Esto es para asegurarse la lectura correcta del archivo
+ * Checkea que los tamanos de los tipos definidos sean realmente los que
+ * deberian ser. Esto es para asegurarse la lectura correcta del archivo
  * en distintas arquitecturas.
  */
 void assertSizes() {
