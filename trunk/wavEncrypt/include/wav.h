@@ -76,5 +76,17 @@ void freeWav(wav_t wav);
  */
 void freeWavFMT(FMT_CK fmt);
 
+void setFMT (wav_t wav, FMT_CK fmt);
+
+void setRiff (wav_t wav, RIFF_CK riff);
+
+void setData (wav_t wav, DATA_CK data);
+
+FMT_CK getFMT (wav_t wav);
+
+RIFF_CK getRiff (wav_t wav);
+
+DATA_CK getData (wav_t wav);
+
 
 #endif /* WAV_H_ */
