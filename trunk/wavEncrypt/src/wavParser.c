@@ -5,6 +5,7 @@
  */
 
 #include <stdio.h>
+#include <arpa/inet.h>
 #include "wav.h"
 #include "debug.h"
 
@@ -17,6 +18,7 @@ wav_t wavParser (wav_t wav, FILE * source) {
 	FMT_CK fmt;
 	DATA_CK data;
 	int bytes;
+
 	if ((bytes = fread(&riff, sizeof(RIFF_CK), 1, source)) == 0){
 		FATAL("Cantidad de bytes leidos: %d\n", bytes);
 		return 0;
@@ -77,6 +79,9 @@ wav_t wavParser (wav_t wav, FILE * source) {
 }
 
 int parseRiff (CKID	chunkID, CKSIZE	chunkSize, CKID	format) {
+	chunkID = ntohl(chunkID);
+	chunkSize = ntohl(chunkSize);
+	format = ntohl(format);
 	if (chunkID != RIFF_CKID || format != RIFF_FORMAT) {
 		return 0;
 	}
