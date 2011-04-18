@@ -1,1 +1,5 @@
-El CWD es .
+El CWD es . (wavEncrypt)
+
+Para compilar agregando las funciones cryptograficas usar
+-lcrypto en la linea del gcc (seguro que se puede configurar en el proyecto)
+
