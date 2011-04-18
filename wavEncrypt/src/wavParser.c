@@ -43,8 +43,8 @@ wav_t wavParser (wav_t wav, FILE * source) {
 	LOG("1\n");
 	LOG("%X\n", data.chunkID);
 	LOG("%d\n", data.chunkSize);
-	LOG("%X_%d_\n", data.chunkID, sizeof(data.chunkID));
-	LOG("%d_%d_\n", data.chunkSize, sizeof(data.chunkSize));
+	LOG("%X_%lu_\n", data.chunkID, sizeof(data.chunkID));
+	LOG("%d_%lu_\n", data.chunkSize, sizeof(data.chunkSize));
 	if ((bytes = fread(&(data.chunkID), sizeof(CKID), 1, source)) == 0) {
 		FATAL("Cantidad de bytes leidos: %d\n", bytes);
 		return 0;
@@ -56,8 +56,8 @@ wav_t wavParser (wav_t wav, FILE * source) {
 		return 0;
 	}
 	LOG("1\n");
-	LOG("%X_%d_\n", data.chunkID, sizeof(data.chunkID));
-	LOG("%d_%d_\n", data.chunkSize, sizeof(data.chunkSize));
+	LOG("%X_%lu_\n", data.chunkID, sizeof(data.chunkID));
+	LOG("%d_%lu_\n", data.chunkSize, sizeof(data.chunkSize));
 	if ((data.soundData = malloc(data.chunkSize)) == NULL) {
 		return 0;
 	}

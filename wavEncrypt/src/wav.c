@@ -47,6 +47,8 @@ static wav_t loadWav(FILE *source){
 	} else {
 		LOG("Dio Bien!\n");
 	}
+
+	return wav;
 }
 
 wav_t newWavFromData(FMT_CK* fmt_ck, BYTE* data, long dataSize) {
