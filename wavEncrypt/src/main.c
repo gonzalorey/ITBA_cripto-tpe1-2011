@@ -17,7 +17,7 @@ void assertSizes();
 int main(int argv, char ** argc){
 	// Esta variable va a valer 1 se se va a encriptar, 2 si se va a desencriptar.
 	// Esto se obtiene a partir del parser, si tiene el -e o el -d
-	int encryptDesencrypt;
+//	int encryptDesencrypt;
 	wav_t wav;
 
 	//Probamos que la arquitectura esta configurada correctamente.
