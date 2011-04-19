@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int
-CLParser(int argc, char ** argv)
-{
+int CLParser(int argc, char ** argv) {
 	int c;
 
 	while((c = getopt(argc, argv, "iae")) != -1)
