@@ -19,6 +19,7 @@ struct wavCDT {
 };
 
 static wav_t loadWav(FILE *source);
+wav_t wavParser (wav_t wav, FILE * source);
 
 wav_t newWavFromPath(char *filepath){
 	LOG("in newWav\n");
@@ -42,11 +43,6 @@ static wav_t loadWav(FILE *source){
 	}
 
 	wav = wavParser(wav, source);
-	if (wav == NULL) {
-		LOG("Dio mal!\n");
-	} else {
-		LOG("Dio Bien!\n");
-	}
 
 	return wav;
 }
