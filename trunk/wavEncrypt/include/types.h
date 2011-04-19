@@ -16,7 +16,7 @@ typedef FOURCC CKID;	//Four-character-code chunk identifier
 typedef DWORD CKSIZE; //32-bit unsigned size value
 
 #define RIFF_CKID 0x52494646
-#define DATA_CKID 0x61746164
+#define DATA_CKID 0x64617461
 #define	RIFF_FORMAT 0x57415645
 #define FMT_CKID 0x666D7420
 #define	FMT_CKSIZE	16

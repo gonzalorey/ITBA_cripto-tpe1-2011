@@ -16,6 +16,7 @@ typedef struct {
 	WORD	wFormatTag; // Format category,i.e.:PCM = 1 (no compres.)
 	WORD	wChannels; // Number of channels:1, mono; 2, stereo
 	DWORD	dwSamplesPerSec;	// Sampling rate: Mhz DWORD	dwAvgBytesPerSec;
+	DWORD	dwAvgBytesPerSec;
 	WORD	wBlockAlign;
 	WORD	wBitsPerSample; //8, 16, etc.
 	WORD	extraParamSize;// If PCM, doesn't exist
