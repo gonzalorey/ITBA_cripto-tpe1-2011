@@ -5,10 +5,10 @@
 
 typedef struct {
 	void *data;
-	long size;
+	int size;
 } dataHolder_t;
 
-dataHolder_t newDataHolder(void *data, long size);
+dataHolder_t newDataHolder(void *data, int size);
 
 void dataHolderFree(dataHolder_t dataHolder);
 
