@@ -38,5 +38,53 @@ La funci—n crypto_Execute recibe tres par‡metros:
 		carga la estructura target con la informaci—n encriptada. Deja en size cuanto
 		de info hay.
 		
+		
+		
+		Ejemplo:
+		
+	//Encripta el archivo fileIn y lo guarda en fileOut encriptado
+	int main() {	
+		
+		char *fileName = "fileIn.txt";
+		char *fileOut = "fileOut.txt";
+	
+		dataHolder_t source;
+		dataHolder_t target;
+	
+		encryption_t encryptation;
+		
+		//Elijo el algorimto de encriptaci—n
+		encryptation.algorithm = algorithm_des;
+		
+		//Elijo el modo de encadenamiento
+		encryptation.ciphermode = ciphermode_ofb;
+	
+		//Elijo que se va a encriptar
+		encryptation.encrypOrDecrypt = encrypOrDecrypt_encrypt;
+	
+		//Elijo que se va a proveer el key y el iv	
+		encryptation.passOrKey = passOrKey_key;
+		
+		//Seteo el key y el iv
+		encryptation.passKeyIv.keyIv.iv = (unsigned char *) "01234567";
+		encryptation.passKeyIv.keyIv.key = (unsigned char *) "12345678";
+	
+		//Cargo el archivo en memoria
+		loadFile(&source.data, &source.size, fileName);
+
+		//Ejecuto la encriptacion, el target va a estar el resultado	
+		crypto_Execute(encryptation, source, &target);
+		
+		//Guardo el archivo en disco.
+		saveFile(&target.data, &target.size, fileOut);
+		
+		//Libero recursos alojados
+		
+		dataHolderFree(target);
+		dataHolderFree(source);
+		
+		return 0;
+		
+	}
 	
 ------------------------------------------------------------------------------------------------
