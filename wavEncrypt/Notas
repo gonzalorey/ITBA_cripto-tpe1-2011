@@ -3,3 +3,40 @@ El CWD es . (wavEncrypt)
 Para compilar agregando las funciones cryptograficas usar
 -lcrypto en la linea del gcc (seguro que se puede configurar en el proyecto)
 
+------------------------------------------------------------------------------------------------
+Manual dataHolder.h
+
+Es un simple contenedor de memoria que lleva por un lado el puntero
+a la memoria y la cantidad de memoria inicializada. Como pueden ver
+la estructura es pœblica y solo tiene 2 funciones para hacer las cosas
+m‡s c—modas. No es ADT, el objetivo es solamente no andar dando vueltas
+con tantas variables y que sean una sola unidad.
+------------------------------------------------------------------------------------------------
+Manual crypto.h
+
+La funci—n crypto_Execute recibe tres par‡metros:
+
+	1. La configuraci—n de ejecuci—n (encryptation_t)
+	2. La memoria a encriptar (dataHolder_t)
+	3. La memoria donde dejar los datos encriptados. (dataHolder_t*)
+	
+	
+	encryptation_t es una estructura que tiene la configuraci—n
+	del lo que hay que hacer.
+	
+	algorithm_t (enum) es el algoritmo a utilizar, puede ser des, aes128, aes256
+	ciphermode_t (enum) es el encadenamiendo, puede ser ecb, cfb, ofb o cbc
+	passOrKey_t (enum) es un flag para indicar si el algoritmo recive un password o un key e iv.
+	keyIv_t (struct) es una estructura que lleva el key y el iv
+	passKeyIv_t (union) es una union que lleva el password o la key y el iv, deacuerdo indique passOrKey
+	encryptOrDecrypt_t (enum) flag que indica si es encryptacion o desencriptacion.
+	
+	source:
+		contiene la memoria a encriptar. Usa sus campos para conocer informaci—n del tama–o.
+		
+	target:
+		carga la estructura target con la informaci—n encriptada. Deja en size cuanto
+		de info hay.
+		
+	
+------------------------------------------------------------------------------------------------
