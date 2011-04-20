@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 
-dataHolder_t newDataHolder(void *data, long size) {
+dataHolder_t newDataHolder(void *data, int size) {
 	dataHolder_t holder;
 
 	holder.data = data;

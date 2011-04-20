@@ -24,8 +24,8 @@ typedef enum {
 } encrypOrDecrypt_t;
 
 typedef struct {
-	char *key;
-	char *iv;
+	unsigned char *key;
+	unsigned char *iv;
 } keyIv_t;
 
 typedef union {
@@ -36,8 +36,8 @@ typedef union {
 typedef struct {
 	algorithm_t algorithm;
 	ciphermode_t ciphermode;
-	passKeyIv_t passKeyIv;
 	passOrKey_t passOrKey;
+	passKeyIv_t passKeyIv;
 	encrypOrDecrypt_t encrypOrDecrypt;
 } encryption_t;
 
