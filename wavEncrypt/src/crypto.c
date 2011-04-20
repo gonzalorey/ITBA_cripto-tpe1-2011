@@ -2,6 +2,7 @@
 
 #include "crypto.h"
 #include "debug.h"
+#include <stdio.h>
 #include <string.h>
 #include <openssl/evp.h>
 #include <openssl/md5.h>
@@ -101,7 +102,7 @@ static void genKey(unsigned char *password,unsigned char *key){
 static void genIv(unsigned char *password,unsigned char *iv){
 	genKey(password, iv);
 	genKey(iv, iv); //Le aplico MD5 a la clave para sacar el iv... ?
-	//TODO: preguntar si esto est‡ bien.
+	//TODO: preguntar si esto estï¿½ bien.
 }
 
 static const EVP_CIPHER *getChiper(algorithm_t algorithm, ciphermode_t cipher) {
