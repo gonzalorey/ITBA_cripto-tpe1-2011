@@ -48,6 +48,6 @@ typedef struct {
  *  un dataHolder y una direcci—n de target. El algoritmo se ocupar‡ de inicializar
  *  la zona de datos del holder y de setear el tama–o de los datos encryptados.
  */
-int cripto_Execute(encryption_t encryptation, dataHolder_t source, dataHolder_t *target);
+int crypto_Execute(encryption_t encryptation, dataHolder_t source, dataHolder_t *target);
 
 #endif /* CRYPTO_H_ */
