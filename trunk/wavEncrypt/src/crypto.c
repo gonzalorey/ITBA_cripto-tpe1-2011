@@ -112,8 +112,8 @@ static const EVP_CIPHER *getChiper(algorithm_t algorithm, ciphermode_t cipher) {
 			return EVP_des_cbc();
 			break;
 		case ciphermode_cfb:
-			return EVP_des_cfb8();
-			break; //La c‡tedra pide feedback de 8
+			return EVP_des_cfb64(); //Es la que usa DES por defaults
+			break;
 		case ciphermode_ecb:
 			return EVP_des_ecb();
 			break;
