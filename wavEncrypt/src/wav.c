@@ -11,6 +11,7 @@
 #include "wav.h"
 #include "types.h"
 #include "debug.h"
+#include "wavParser.h"
 
 struct wavCDT {
 	RIFF_CK	riff_desc;
@@ -19,7 +20,6 @@ struct wavCDT {
 };
 
 static wav_t loadWav(FILE *source);
-wav_t wavParser (wav_t wav, FILE * source);
 
 wav_t newWavFromPath(char *filepath){
 	LOG("in newWav\n");
@@ -43,6 +43,9 @@ static wav_t loadWav(FILE *source){
 	}
 
 	wav = wavParser(wav, source);
+	LOG("data_chunkID: %X\n", wav->data.chunkID);
+			LOG("fmt_chunkID: %X\n", wav->fmt.chunkID);
+			LOG("riff_chunkID: %X\n", wav->riff_desc.chunkID);
 
 	return wav;
 }
