@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "types.h"
 #include "wav.h"
+#include "wavParser.h"
 
 void assertSizes();
 
@@ -28,7 +29,6 @@ int main(int argv, char ** argc){
 	// -----------------------------------------------------------------------------
 
 	wav = newWavFromPath(argc[1]);
-
 
 	return 0;
 
