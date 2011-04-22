@@ -50,4 +50,16 @@ typedef struct {
  */
 int crypto_Execute(encryption_t encryptation, dataHolder_t source, dataHolder_t *target);
 
+encryption_t newEncryptation();
+
+int setCryptoAlgorithm(encryption_t * enc, algorithm_t algorithm);
+
+int setCryptoCiphermode(encryption_t * enc, ciphermode_t ciphermode);
+
+int setCryptoEncryptOrDecrypt(encryption_t * enc, encrypOrDecrypt_t encryptOrDecrypt);
+
+int setCryptoPassKeyIv(encryption_t * enc, passKeyIv_t passKeyIv);
+
+int setCryptoPassOrKey(encryption_t * enc, passOrKey_t passOrKey);
+
 #endif /* CRYPTO_H_ */

@@ -19,6 +19,65 @@ static void genIv(unsigned char *password,unsigned char *iv);
 
 static const  EVP_CIPHER *getChiper(algorithm_t algorithm, ciphermode_t cipher);
 
+encryption_t newEncryptation(){
+	encryption_t enc;
+
+	enc.algorithm = -1;
+	enc.ciphermode = -1;
+	enc.encrypOrDecrypt = -1;
+	enc.passKeyIv.password = NULL;
+	enc.passKeyIv.keyIv.iv = NULL;
+	enc.passKeyIv.keyIv.key = NULL;
+	enc.passOrKey = -1;
+
+	return enc;
+}
+
+int setCryptoAlgorithm(encryption_t * enc, algorithm_t algorithm){
+	if(enc->algorithm != -1)
+		return -1;
+
+	enc->algorithm = algorithm;
+
+	return 0;
+}
+
+int setCryptoCiphermode(encryption_t * enc, ciphermode_t ciphermode){
+	if(enc->ciphermode != -1)
+		return -1;
+
+	enc->ciphermode;
+
+	return 0;
+}
+
+int setCryptoEncryptOrDecrypt(encryption_t * enc, encrypOrDecrypt_t encryptOrDecrypt){
+	if(enc->encrypOrDecrypt != -1)
+		return -1;
+
+	enc->encrypOrDecrypt = encryptOrDecrypt;
+
+	return 0;
+}
+
+int setCryptoPassKeyIv(encryption_t * enc, passKeyIv_t passKeyIv){
+	if()
+		return -1;
+
+	enc->passKeyIv = passKeyIv;
+
+	return 0;
+}
+
+int setCryptoPassOrKey(encryption_t * enc, passOrKey_t passOrKey){
+	if()
+		return -1;
+
+	enc->passOrKey = passOrKey;
+
+	return 0;
+}
+
 int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 		dataHolder_t *target) {
 
