@@ -7,7 +7,7 @@
 
 
 typedef enum {
-	algorithm_des, algorithm_aes, algorithm_aes128, algorithm_aes256
+	algorithm_des, algorithm_aes128, algorithm_aes192, algorithm_aes256
 } algorithm_t;
 
 typedef enum {
@@ -29,7 +29,7 @@ typedef struct {
 } keyIv_t;
 
 typedef union {
-	char *password;
+	unsigned char *password;
 	keyIv_t keyIv;
 } passKeyIv_t;
 
@@ -52,6 +52,16 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source, dataHolder_t 
 
 encryption_t newEncryptation();
 
+int isSetCryptoAlgorithm(encryption_t enc);
+
+int isSetCryptoCiphermode(encryption_t enc);
+
+int isSetCryptoEncryptOrDecrypt(encryption_t enc);
+
+int isSetCryptoPassKeyIv(encryption_t enc);
+
+int isSetCryptoPassOrKey(encryption_t enc);
+
 int setCryptoAlgorithm(encryption_t * enc, algorithm_t algorithm);
 
 int setCryptoCiphermode(encryption_t * enc, ciphermode_t ciphermode);
@@ -61,5 +71,7 @@ int setCryptoEncryptOrDecrypt(encryption_t * enc, encrypOrDecrypt_t encryptOrDec
 int setCryptoPassKeyIv(encryption_t * enc, passKeyIv_t passKeyIv);
 
 int setCryptoPassOrKey(encryption_t * enc, passOrKey_t passOrKey);
+
+int isCryptoValid(encryption_t enc);
 
 #endif /* CRYPTO_H_ */

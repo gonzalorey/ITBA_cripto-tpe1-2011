@@ -7,83 +7,127 @@
 #include <openssl/evp.h>
 #include <openssl/md5.h>
 
+#define EMPTY -1
 
 #define EXTRA_SPACE 1024 //Extra space for algorithm... who knows?
+typedef int (*fncInit_t)(EVP_CIPHER_CTX*, const EVP_CIPHER*,
+		const unsigned char *, const unsigned char *);
+typedef int (*fncUpdate_t)(EVP_CIPHER_CTX*, unsigned char *, int *,
+		const unsigned char*, int);
+typedef int (*fncFinal_t)(EVP_CIPHER_CTX*, unsigned char *, int *);
 
-typedef int (*fncInit_t)(EVP_CIPHER_CTX*, const EVP_CIPHER*, const unsigned char *, const unsigned char *);
-typedef int (*fncUpdate_t)(EVP_CIPHER_CTX*, unsigned char *, int *, const unsigned char*, int);
-typedef int (*fncFinal_t)(EVP_CIPHER_CTX*, unsigned char *,int *);
+static void genKey(unsigned char *password, unsigned char *key);
+static void genIv(unsigned char *password, unsigned char *iv);
 
-static void genKey(unsigned char *password,unsigned char *key);
-static void genIv(unsigned char *password,unsigned char *iv);
+static const EVP_CIPHER *getChiper(algorithm_t algorithm, ciphermode_t cipher);
 
-static const  EVP_CIPHER *getChiper(algorithm_t algorithm, ciphermode_t cipher);
+typedef const EVP_CIPHER* (*fncCipher_t)(void);
 
-encryption_t newEncryptation(){
+// Mode          cbc    cfb64   ecb    ofb
+// algoritmh
+// des
+// aes128
+// aes192
+// aes256
+
+const static fncCipher_t ciphers[4][4] =
+		{ { EVP_des_cbc, EVP_des_cfb64, EVP_des_ecb, EVP_des_ofb }, {
+				EVP_aes_128_cbc, EVP_aes_128_cfb128, EVP_aes_128_ecb,
+				EVP_aes_128_ofb }, { EVP_aes_192_cbc, EVP_aes_192_cfb128,
+				EVP_aes_192_ecb, EVP_aes_192_ofb }, { EVP_aes_256_cbc,
+				EVP_aes_256_cfb128, EVP_aes_256_ecb, EVP_aes_256_ofb } };
+
+encryption_t newEncryptation() {
 	encryption_t enc;
 
-	enc.algorithm = -1;
-	enc.ciphermode = -1;
-	enc.encrypOrDecrypt = -1;
+	enc.algorithm = EMPTY;
+	enc.ciphermode = EMPTY;
+	enc.encrypOrDecrypt = EMPTY;
 	enc.passKeyIv.password = NULL;
 	enc.passKeyIv.keyIv.iv = NULL;
 	enc.passKeyIv.keyIv.key = NULL;
-	enc.passOrKey = -1;
+	enc.passOrKey = EMPTY;
 
 	return enc;
 }
 
-int setCryptoAlgorithm(encryption_t * enc, algorithm_t algorithm){
-	if(enc->algorithm != -1)
-		return -1;
+int isSetCryptoAlgorithm(encryption_t enc) {
+	return enc.algorithm != EMPTY;
+}
 
+int isSetCryptoCiphermode(encryption_t enc) {
+	return enc.ciphermode != EMPTY;
+}
+
+int isSetCryptoEncryptOrDecrypt(encryption_t enc) {
+	return enc.encrypOrDecrypt != EMPTY;
+}
+
+int isSetCryptoPassKeyIv(encryption_t enc) {
+	if (!isSetCryptoPassOrKey(enc)) {
+		return 0;
+	}
+
+	if (enc.passOrKey == passOrKey_key)
+		return enc.passKeyIv.keyIv.iv != NULL && enc.passKeyIv.keyIv.key
+				!= NULL;
+	else
+		return enc.passKeyIv.password != NULL;
+}
+
+int isSetCryptoPassOrKey(encryption_t enc) {
+	return enc.passOrKey != EMPTY;
+}
+
+int setCryptoAlgorithm(encryption_t * enc, algorithm_t algorithm) {
 	enc->algorithm = algorithm;
-
-	return 0;
+	return 1;
 }
 
-int setCryptoCiphermode(encryption_t * enc, ciphermode_t ciphermode){
-	if(enc->ciphermode != -1)
-		return -1;
-
-	enc->ciphermode;
-
-	return 0;
+int setCryptoCiphermode(encryption_t * enc, ciphermode_t ciphermode) {
+	enc->ciphermode = ciphermode;
+	return 1;
 }
 
-int setCryptoEncryptOrDecrypt(encryption_t * enc, encrypOrDecrypt_t encryptOrDecrypt){
-	if(enc->encrypOrDecrypt != -1)
-		return -1;
-
+int setCryptoEncryptOrDecrypt(encryption_t * enc,
+		encrypOrDecrypt_t encryptOrDecrypt) {
 	enc->encrypOrDecrypt = encryptOrDecrypt;
-
-	return 0;
+	return 1;
 }
 
-int setCryptoPassKeyIv(encryption_t * enc, passKeyIv_t passKeyIv){
-	if()
-		return -1;
+int setCryptoPassKeyIv(encryption_t * enc, passKeyIv_t passKeyIv) {
+
+	if (!isSetCryptoPassOrKey(*enc))
+		return 0;
+
+	if (enc->passOrKey == passOrKey_key) {
+		if (passKeyIv.keyIv.iv == NULL || passKeyIv.keyIv.key == NULL) {
+			return 0;
+		}
+	} else {
+		if (passKeyIv.password == NULL) {
+			return 0;
+		}
+	}
 
 	enc->passKeyIv = passKeyIv;
-
-	return 0;
+	return 1;
 }
 
-int setCryptoPassOrKey(encryption_t * enc, passOrKey_t passOrKey){
-	if()
-		return -1;
-
+int setCryptoPassOrKey(encryption_t * enc, passOrKey_t passOrKey) {
 	enc->passOrKey = passOrKey;
-
 	return 0;
 }
 
 int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 		dataHolder_t *target) {
 
+	if (!isCryptoValid(encryptation))
+		return 0;
+
 	//Key and IV holders
-	unsigned char key[EVP_MAX_KEY_LENGTH] = {0};
-	unsigned char iv[EVP_MAX_IV_LENGTH] = {0};
+	unsigned char key[EVP_MAX_KEY_LENGTH] = { 0 };
+	unsigned char iv[EVP_MAX_IV_LENGTH] = { 0 };
 
 	//Context holder
 	EVP_CIPHER_CTX ctx;
@@ -96,7 +140,7 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	long allocatedSize; //The data size of memory allocated;
 
 	//Getting enogth space for result
-	if((target->data = malloc(source.size + EXTRA_SPACE)) == NULL){
+	if ((target->data = malloc(source.size + EXTRA_SPACE)) == NULL) {
 		ERROR("Memory Allocation failed\n");
 		return 0;
 	}
@@ -104,9 +148,8 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	allocatedSize = target->size;
 	LOG("Memory at: %p\n", target->data);
 
-
 	//Get the key and the iv
-	if (encryptation.passOrKey == passOrKey_key){
+	if (encryptation.passOrKey == passOrKey_key) {
 		LOG("Copying key and iv from structure\n");
 		memcpy(key, encryptation.passKeyIv.keyIv.key, MD5_DIGEST_LENGTH);
 		memcpy(iv, encryptation.passKeyIv.keyIv.iv, MD5_DIGEST_LENGTH);
@@ -117,7 +160,7 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	}
 
 	//Choose what to do... encrypt or decrypt?
-	if(encryptation.encrypOrDecrypt == encrypOrDecrypt_encrypt){
+	if (encryptation.encrypOrDecrypt == encrypOrDecrypt_encrypt) {
 		LOG("Encryptation\n");
 		fncInit = EVP_EncryptInit;
 		fncUpdate = EVP_EncryptUpdate;
@@ -131,20 +174,22 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 
 	//Do what we came for
 	LOG("Init process\n");
-	fncInit(&ctx, getChiper(encryptation.algorithm, encryptation.ciphermode), key, iv);
+	fncInit(&ctx, getChiper(encryptation.algorithm, encryptation.ciphermode),
+			key, iv);
 	LOG("Update process\n");
-	fncUpdate(&ctx, (unsigned char *) target->data, &target->size, source.data, source.size);
+	fncUpdate(&ctx, (unsigned char *) target->data, &target->size, source.data,
+			source.size);
 	LOG("Final process targetSize: %d\n", target->size);
 	LOG("Target offset for final: %p\n", target->data + target->size);
 	int extra; //How much extra of info we are using.
-	fncFinal(&ctx,target->data + target->size, &extra);
+	fncFinal(&ctx, target->data + target->size, &extra);
 	LOG("Extra size: %d\n", extra);
 
 	target->size += extra;
 	LOG("Final total size: %d\n", target->size);
 	LOG("Encryptation/Dencryptation ended.\n");
 	//Redimention of target data, so we don't waste memory.
-	if(allocatedSize > target->size){
+	if (allocatedSize > target->size) {
 		LOG("Freeing spared memory to %d\n", target->size);
 		target->data = realloc(target->data, target->size);
 		//We are "freeing memory", so pointer should not move memory.
@@ -154,41 +199,58 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	return 1;
 }
 
-static void genKey(unsigned char *password,unsigned char *key){
-	MD5(password, strlen((char *)password), key);
+int isCryptoValid(encryption_t enc) {
+	return isSetCryptoAlgorithm(enc) && isSetCryptoCiphermode(enc)
+			&& isSetCryptoEncryptOrDecrypt(enc) && isSetCryptoPassOrKey(enc)
+			&& isSetCryptoPassKeyIv(enc);
 }
 
-static void genIv(unsigned char *password,unsigned char *iv){
+static void genKey(unsigned char *password, unsigned char *key) {
+	MD5(password, strlen((char *) password), key);
+}
+
+static void genIv(unsigned char *password, unsigned char *iv) {
 	genKey(password, iv);
 	genKey(iv, iv); //Le aplico MD5 a la clave para sacar el iv... ?
 	//TODO: preguntar si esto est� bien.
 }
 
-static const EVP_CIPHER *getChiper(algorithm_t algorithm, ciphermode_t cipher) {
+static const EVP_CIPHER *getChiper(algorithm_t algorithm,
+		ciphermode_t ciphermode) {
 
-	if (algorithm == algorithm_des) {
-		switch (cipher) {
-		case ciphermode_cbc:
-			return EVP_des_cbc();
-			break;
-		case ciphermode_cfb:
-			return EVP_des_cfb64(); //Es la que usa DES por defaults
-			break;
-		case ciphermode_ecb:
-			return EVP_des_ecb();
-			break;
-		case ciphermode_ofb:
-			return EVP_des_ofb();
-			break;
-		}
-	} else {
-		switch(cipher){
-		case ciphermode_cbc: case ciphermode_cfb:
-		case ciphermode_ecb: case ciphermode_ofb:
-			//TODO: Hacer el switch de AES
-			return EVP_enc_null();
-			break;
-		}
+	const fncCipher_t *modes;
+
+	switch (algorithm) {
+	case algorithm_des:
+		modes = ciphers[0];
+		break;
+	case algorithm_aes128:
+		modes = ciphers[1];
+		break;
+	case algorithm_aes192:
+		modes = ciphers[2];
+		break;
+	case algorithm_aes256:
+		modes = ciphers[3];
+		break;
+	default:
+		return EVP_enc_null();
+
+	}
+
+	switch (ciphermode) {
+	case ciphermode_cbc:
+		return modes[0]();
+		break;
+	case ciphermode_cfb:
+		return modes[1]();
+		break;
+	case ciphermode_ecb:
+		return modes[2]();
+		break;
+	case ciphermode_ofb:
+		return modes[3]();
+		break;
 	}
 	return EVP_enc_null(); //NO hacer nada
 }
