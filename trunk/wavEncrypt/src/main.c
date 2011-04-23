@@ -8,10 +8,13 @@
 #include <time.h>
 #include <assert.h>
 #include <stdlib.h>
+#include "cryptoTest.h"
 #include "debug.h"
 #include "types.h"
 #include "wav.h"
 #include "wavParser.h"
+
+#define RUNCRYPTOTESTS
 
 void assertSizes();
 
@@ -23,6 +26,11 @@ int main(int argv, char ** argc){
 
 	//Probamos que la arquitectura esta configurada correctamente.
 	assertSizes();
+
+#ifdef RUNCRYPTOTESTS
+	cryptoRunTests();
+#endif
+
 
 	// -----------------------------------------------------------------------------
 	// Aca se invoca al parser del colo
