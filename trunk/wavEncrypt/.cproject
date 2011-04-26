@@ -45,24 +45,8 @@
 								<option id="gnu.c.compiler.option.include.paths.1031369565" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/wavEncrypt/include}&quot;"/>
 								</option>
-								<option id="gnu.c.compiler.option.preprocessor.def.symbols.226408075" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols">
-									<listOptionValue builtIn="false" value="DEBUG_LOG"/>
-								</option>
+								<option id="gnu.c.compiler.option.preprocessor.def.symbols.226408075" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" valueType="definedSymbols"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1430894261" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
-							</tool>
-						</toolChain>
-					</folderInfo>
-					<folderInfo id="cdt.managedbuild.config.macosx.exe.release.365144370.584061923" name="/" resourcePath="include">
-						<toolChain id="cdt.managedbuild.toolchain.gnu.macosx.exe.release.1438945993" name="MacOSX GCC" superClass="cdt.managedbuild.toolchain.gnu.macosx.exe.release" unusedChildren="">
-							<tool id="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.release.1943610380" name="MacOS X C Linker" superClass="cdt.managedbuild.tool.macosx.c.linker.macosx.exe.release.471152990"/>
-							<tool id="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.release.577355042" name="MacOS X C++ Linker" superClass="cdt.managedbuild.tool.macosx.cpp.linker.macosx.exe.release.1626369391"/>
-							<tool id="cdt.managedbuild.tool.gnu.assembler.macosx.exe.release.1169993079" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.macosx.exe.release.1991956905">
-								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.331210592" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
-							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.archiver.macosx.base.2110272096" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.macosx.base.903357721"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.release.722507007" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.macosx.exe.release.13792156"/>
-							<tool id="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.release.681754642" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.macosx.exe.release.1259171501">
-								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.714596570" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>

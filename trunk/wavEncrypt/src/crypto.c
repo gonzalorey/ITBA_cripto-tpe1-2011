@@ -1,11 +1,13 @@
 /* crypto.c */
 
 #include "crypto.h"
-#include "debug.h"
 #include <stdio.h>
 #include <string.h>
 #include <openssl/evp.h>
 #include <openssl/md5.h>
+
+#define DEBUG_ERROR
+#include "debug.h"
 
 #define EMPTY -1
 

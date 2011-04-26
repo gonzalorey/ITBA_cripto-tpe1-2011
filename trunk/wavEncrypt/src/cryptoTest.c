@@ -5,11 +5,14 @@
  *      Author: anizzomc
  */
 
-#include "debug.h"
+
 #include "dataHolder.h"
 #include "cryptoTest.h"
 #include "crypto.h"
 #include <string.h>
+
+#define DEBUG_LOG
+#include "debug.h"
 
 static char
 		*plainText =
@@ -55,7 +58,7 @@ void testInit() {
 	setCryptoPassKeyIv(&enc, passKeyIv);
 
 	source.data = plainText;
-	source.size = strlen(plainText + 1);
+	source.size = strlen(plainText);
 
 }
 
@@ -87,7 +90,7 @@ void testAlgorithm(char *name, algorithm_t algorithm, ciphermode_t ciphermode) {
 		return;
 	}
 
-	if (!strncmp(source.data, decrypt.data, decrypt.size)) {
+	if (memcmp(source.data, decrypt.data, decrypt.size)) {
 		ERROR("%s decrypt and source data don't match\n", name);
 		return;
 	}
