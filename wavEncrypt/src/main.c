@@ -9,12 +9,14 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "cryptoTest.h"
-#include "debug.h"
 #include "types.h"
 #include "wav.h"
-#include "wavParser.h"
 
-#define RUNCRYPTOTESTS
+//#define RUNCRYPTOTESTS
+
+
+#define DEBUG_LOG
+#include "debug.h"
 
 void assertSizes();
 
@@ -36,9 +38,24 @@ int main(int argv, char ** argc){
 	// Aca se invoca al parser del colo
 	// -----------------------------------------------------------------------------
 
-	wav = newWavFromPath(argc[1]);
+	wav = newWavFromFile("wav/la-mi.wav");
 
-	return 0;
+	FMT_CK fmt = wavGetFMT(wav);
+	dataHolder_t soundData = wavGetData(wav);
+
+	wav_t wavAux = newWavFromData(fmt,soundData);
+
+	int result = wavWriteToFile(wavAux, "la-miAUX.wav");
+
+	LOG("Save result: %s\n", (result)? "Success":"Fail");
+
+	freeWavFMT(fmt);
+	dataHolderFree(soundData);
+	freeWav(wav);
+	freeWav(wavAux);
+
+	LOG("Ended");
+	return !result;
 
 }
 
