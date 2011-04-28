@@ -4,9 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <openssl/evp.h>
-#include <openssl/md5.h>
+#include "macros.h"
 
-#define DEBUG_ERROR
+#define DEBUG_WARN
 #include "debug.h"
 
 #define EMPTY -1
@@ -17,9 +17,6 @@ typedef int (*fncInit_t)(EVP_CIPHER_CTX*, const EVP_CIPHER*,
 typedef int (*fncUpdate_t)(EVP_CIPHER_CTX*, unsigned char *, int *,
 		const unsigned char*, int);
 typedef int (*fncFinal_t)(EVP_CIPHER_CTX*, unsigned char *, int *);
-
-static void genKey(unsigned char *password, unsigned char *key);
-static void genIv(unsigned char *password, unsigned char *iv);
 
 static const EVP_CIPHER *getChiper(algorithm_t algorithm, ciphermode_t cipher);
 
@@ -33,11 +30,10 @@ typedef const EVP_CIPHER* (*fncCipher_t)(void);
 // aes256
 
 const static fncCipher_t ciphers[4][4] =
-		{ { EVP_des_cbc, EVP_des_cfb64, EVP_des_ecb, EVP_des_ofb }, {
-				EVP_aes_128_cbc, EVP_aes_128_cfb128, EVP_aes_128_ecb,
-				EVP_aes_128_ofb }, { EVP_aes_192_cbc, EVP_aes_192_cfb128,
-				EVP_aes_192_ecb, EVP_aes_192_ofb }, { EVP_aes_256_cbc,
-				EVP_aes_256_cfb128, EVP_aes_256_ecb, EVP_aes_256_ofb } };
+		{ { EVP_des_cbc, EVP_des_cfb8, EVP_des_ecb, EVP_des_ofb },
+		{	EVP_aes_128_cbc, EVP_aes_128_cfb8, EVP_aes_128_ecb, EVP_aes_128_ofb },
+		{   EVP_aes_192_cbc, EVP_aes_192_cfb8, EVP_aes_192_ecb, EVP_aes_192_ofb },
+		{   EVP_aes_256_cbc, EVP_aes_256_cfb8, EVP_aes_256_ecb, EVP_aes_256_ofb } };
 
 encryption_t newEncryptation() {
 	encryption_t enc;
@@ -153,12 +149,13 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	//Get the key and the iv
 	if (encryptation.passOrKey == passOrKey_key) {
 		LOG("Copying key and iv from structure\n");
-		memcpy(key, encryptation.passKeyIv.keyIv.key, MD5_DIGEST_LENGTH);
-		memcpy(iv, encryptation.passKeyIv.keyIv.iv, MD5_DIGEST_LENGTH);
+		int keylen = strlen((char*)encryptation.passKeyIv.keyIv.key);
+		int ivlen = strlen((char*)encryptation.passKeyIv.keyIv.iv);
+		memcpy(key, encryptation.passKeyIv.keyIv.key, LOWER(EVP_MAX_KEY_LENGTH, keylen));
+		memcpy(iv, encryptation.passKeyIv.keyIv.iv, LOWER(EVP_MAX_IV_LENGTH, ivlen));
 	} else {
 		LOG("Generating key and iv from password\n");
-		genKey(encryptation.passKeyIv.password, key);
-		genIv(encryptation.passKeyIv.password, iv);
+		EVP_BytesToKey(getChiper(encryptation.algorithm, encryptation.ciphermode), EVP_md5(), NULL, encryptation.passKeyIv.password, strlen((char*)encryptation.passKeyIv.password),1, key, iv);
 	}
 
 	//Choose what to do... encrypt or decrypt?
@@ -198,6 +195,8 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 		//This should not fail.
 	}
 
+	EVP_CIPHER_CTX_cleanup(&ctx);
+
 	return 1;
 }
 
@@ -205,16 +204,6 @@ int isCryptoValid(encryption_t enc) {
 	return isSetCryptoAlgorithm(enc) && isSetCryptoCiphermode(enc)
 			&& isSetCryptoEncryptOrDecrypt(enc) && isSetCryptoPassOrKey(enc)
 			&& isSetCryptoPassKeyIv(enc);
-}
-
-static void genKey(unsigned char *password, unsigned char *key) {
-	MD5(password, strlen((char *) password), key);
-}
-
-static void genIv(unsigned char *password, unsigned char *iv) {
-	genKey(password, iv);
-	genKey(iv, iv); //Le aplico MD5 a la clave para sacar el iv... ?
-	//TODO: preguntar si esto est� bien.
 }
 
 static const EVP_CIPHER *getChiper(algorithm_t algorithm,

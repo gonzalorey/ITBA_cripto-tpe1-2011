@@ -88,3 +88,16 @@ La funci—n crypto_Execute recibe tres par‡metros:
 	}
 	
 ------------------------------------------------------------------------------------------------
+Los archivos wav probarlos con el password "sorpresa"
+
+fun2DESCBC funciona, es un tema de los mosca.
+fun2DESCFB funciona, es un tema de la mosca.
+fun2DESOFB funciona, es un tema de la mosca.. otro m‡s?
+fun2AESCBC funca, es con aes 128
+fun2AESCFB funca, es con aes 128 y cfb de 8
+fun2AESOFB funca, es con aes 128
+
+
+------------------------------------------------------------------------------------------------
+Usando CFB 8 desencriptamos el archivo fun2DESCFB, sin embargo, openssl usa por defecto cfb 64
+------------------------------------------------------------------------------------------------
