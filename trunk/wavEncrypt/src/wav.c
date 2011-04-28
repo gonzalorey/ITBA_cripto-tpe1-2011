@@ -64,7 +64,13 @@ wav_t newWavFromFile(char *path) {
 		return NULL;
 	}
 
-	ret = loadWavFromFile(source);
+	if ((ret = malloc(sizeof(struct wavCDT))) == NULL) {
+		ERROR("No memory!!");
+		return NULL;
+	}
+	ret = wavParser(ret, source);
+	//ret = loadWavFromFile(source);
+
 	fclose(source);
 
 	return ret;
