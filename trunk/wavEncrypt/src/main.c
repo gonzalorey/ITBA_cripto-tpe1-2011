@@ -8,6 +8,7 @@
 #include <time.h>
 #include <assert.h>
 #include <stdlib.h>
+#include "crypto.h"
 #include "cryptoTest.h"
 #include "types.h"
 #include "wav.h"
@@ -38,14 +39,29 @@ int main(int argv, char ** argc){
 	// Aca se invoca al parser del colo
 	// -----------------------------------------------------------------------------
 
-	wav = newWavFromFile("wav/la-mi.wav");
+
+	dataHolder_t target;
+	wav = newWavFromFile("wav/fun2AESCBC.wav");
+
+	encryption_t enc = newEncryptation();
+	passKeyIv_t passKeyIv;
+
+	setCryptoAlgorithm(&enc, algorithm_aes128);
+	setCryptoCiphermode(&enc, ciphermode_cbc);
+	setCryptoEncryptOrDecrypt(&enc, encrypOrDecrypt_decrypt);
+	setCryptoPassOrKey(&enc, passOrKey_pass);
+	passKeyIv.password = (unsigned char*)"sorpresa";
+	setCryptoPassKeyIv(&enc, passKeyIv);
 
 	FMT_CK fmt = wavGetFMT(wav);
 	dataHolder_t soundData = wavGetData(wav);
 
-	wav_t wavAux = newWavFromData(fmt,soundData);
+	int cryptoResult = crypto_Execute(enc, soundData, &target);
+	LOG("cryptoResult: %d\n", cryptoResult);
 
-	int result = wavWriteToFile(wavAux, "la-miAUX.wav");
+	wav_t wavAux = newWavFromData(fmt,target);
+
+	int result = wavWriteToFile(wavAux, "sorpresa.wav");
 
 	LOG("Save result: %s\n", (result)? "Success":"Fail");
 
