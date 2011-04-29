@@ -360,6 +360,24 @@ Shakuras:wavEncrypt anizzomc$ hexdump -C -n 192 do-siAES128CFBCorruptDecrypted.w
 Ocurre lo mismo que ocurre con DES, nada m‡s que como el tama–o de bloque es de 128 bits, o 16 bytes
 el error se propaga por 2 bloques de encryptaci—n. Nada m‡s que son de mayor tama–o.
 ------------------------------------------------------------------------------------------------
+incogDES se desencripta con 
+
+setCryptoAlgorithm(&enc, algorithm_des);
+setCryptoCiphermode(&enc, ciphermode_ecb);
+setCryptoEncryptOrDecrypt(&enc, encrypOrDecrypt_decrypt);
+setCryptoPassOrKey(&enc, passOrKey_key);
+passKeyIv.keyIv.key = (unsigned char*) "12345678";
+passKeyIv.keyIv.iv = (unsigned char*) "87654321";
+
+
+incogAES se desencripta con
+setCryptoAlgorithm(&enc, algorithm_aes128);
+setCryptoCiphermode(&enc, ciphermode_ecb);
+setCryptoEncryptOrDecrypt(&enc, encrypOrDecrypt_decrypt);
+setCryptoPassOrKey(&enc, passOrKey_key);
+passKeyIv.keyIv.key = (unsigned char*) "1234567812345678";
+passKeyIv.keyIv.iv = (unsigned char*) "8765432100000000";
+------------------------------------------------------------------------------------------------
 
 
 0	0000
