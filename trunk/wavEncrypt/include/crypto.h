@@ -41,6 +41,12 @@ typedef struct {
 	encrypOrDecrypt_t encrypOrDecrypt;
 } encryption_t;
 
+typedef struct {
+	encryption_t encription;
+	char * sourceFile;
+	char * targetFile;
+} cryptoHolder_t;
+
 
 /**
  *  Funci—n que encripta y desencripta segun corresponda. Es necesario construir una
