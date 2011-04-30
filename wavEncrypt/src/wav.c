@@ -10,6 +10,7 @@
 
 #include "wav.h"
 #include "types.h"
+#include "wavParser.h"
 
 #define DEBUG_WARN
 #include "debug.h"
@@ -64,12 +65,12 @@ wav_t newWavFromFile(char *path) {
 		return NULL;
 	}
 
-	if ((ret = malloc(sizeof(struct wavCDT))) == NULL) {
+	/*if ((ret = malloc(sizeof(struct wavCDT))) == NULL) {
 		ERROR("No memory!!");
 		return NULL;
 	}
-	ret = wavParser(ret, source);
-	//ret = loadWavFromFile(source);
+	ret = wavParser(ret, source);*/
+	ret = loadWavFromFile(source);
 
 	fclose(source);
 
