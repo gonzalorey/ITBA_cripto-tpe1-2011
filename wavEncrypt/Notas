@@ -102,6 +102,14 @@ fun2AESOFB funca, es con aes 128
 Usando CFB 8 desencriptamos el archivo fun2DESCFB, sin embargo, openssl usa por defecto cfb 64
 ------------------------------------------------------------------------------------------------
 
+1)
+
+ECB con AES y DES
+
+Resulta que hay frecuencias que produce que bloques iguales encripten a cosas iguales, 
+
+SOL en AES
+DO en DES
 
 ------------------------------------------------------------------------------------------------
 4)
@@ -361,7 +369,6 @@ Ocurre lo mismo que ocurre con DES, nada m‡s que como el tama–o de bloque es de 
 el error se propaga por 2 bloques de encryptaci—n. Nada m‡s que son de mayor tama–o.
 ------------------------------------------------------------------------------------------------
 incogDES se desencripta con 
-
 setCryptoAlgorithm(&enc, algorithm_des);
 setCryptoCiphermode(&enc, ciphermode_ecb);
 setCryptoEncryptOrDecrypt(&enc, encrypOrDecrypt_decrypt);
@@ -377,6 +384,12 @@ setCryptoEncryptOrDecrypt(&enc, encrypOrDecrypt_decrypt);
 setCryptoPassOrKey(&enc, passOrKey_key);
 passKeyIv.keyIv.key = (unsigned char*) "1234567812345678";
 passKeyIv.keyIv.iv = (unsigned char*) "8765432100000000";
+
+Las notas musicales en AES son do-la, mirar comparaci—nAES.png
+
+Las notas musicales en DES son la-do, mirar comparaci—nDES.png
+
+Luego, si se escuchan los archivos, se puede comprobar que realmente son dichos archivos.
 ------------------------------------------------------------------------------------------------
 
 
