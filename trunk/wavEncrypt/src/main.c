@@ -43,7 +43,6 @@ int main(int argc, char ** argv){
 
 
 	if((cryptoHolder = clparser(argc, argv)) == NULL || !checkCryptoHolder(cryptoHolder)) {
-		showHelp();
 		return 0;
 	}
 
@@ -291,6 +290,7 @@ clparser(int argc, char ** argv){
 
 			case 10:
 				showHelp();
+				return NULL;
 				break;
 
 			default:
@@ -301,7 +301,7 @@ clparser(int argc, char ** argv){
 
 
 	if(error){
-		printf("ERROR\n");
+		printf("ERROR: Argument not understood %s\n", getValue(parser));
 		return NULL;
 	}
 
