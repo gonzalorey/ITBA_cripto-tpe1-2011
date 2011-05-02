@@ -26,24 +26,20 @@ void assertSizes();
 cryptoHolder_t * clparser(int argc, char ** argv);
 
 int main(int argc, char ** argv){
-	// Esta variable va a valer 1 se se va a encriptar, 2 si se va a desencriptar.
-	// Esto se obtiene a partir del parser, si tiene el -e o el -d
-//	int encryptDesencrypt;
 	wav_t wav;
 
 	cryptoHolder_t * cryptoHolder;
 	if((cryptoHolder = clparser(argc, argv)) == NULL)
 		return 0;
 
-	//Probamos que la arquitectura esta configurada correctamente.
-	//assertSizes();
-
-#ifdef RUNCRYPTOTESTS
-	cryptoRunTests();
-#endif
+	#ifdef RUNCRYPTOTESTS
+		cryptoRunTests();
+	#endif
 
 	dataHolder_t target;
 	wav = newWavFromFile(cryptoHolder->sourceFile);
+	if (wav == NULL)
+		return 1;
 
 	FMT_CK fmt = wavGetFMT(wav);
 	dataHolder_t soundData = wavGetData(wav);

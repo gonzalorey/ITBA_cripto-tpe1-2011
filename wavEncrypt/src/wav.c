@@ -61,15 +61,10 @@ wav_t newWavFromFile(char *path) {
 	wav_t ret;
 
 	if((source = fopen(path, "r")) == NULL){
-		ERROR("File opening filed\n");
+		ERROR("File opening failed\n");
 		return NULL;
 	}
 
-	/*if ((ret = malloc(sizeof(struct wavCDT))) == NULL) {
-		ERROR("No memory!!");
-		return NULL;
-	}
-	ret = wavParser(ret, source);*/
 	ret = loadWavFromFile(source);
 
 	fclose(source);
