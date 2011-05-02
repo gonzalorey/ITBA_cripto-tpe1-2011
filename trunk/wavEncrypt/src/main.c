@@ -197,7 +197,7 @@ clparser(int argc, char ** argv){
 
 			case 6:
 				printf("Key: %s\n", getValue(parser));
-				if(isSetCryptoPassKeyIv(encriptation) || isSetCryptoPassOrKey(encriptation) || keyIv.key != NULL){
+				if(keyIv.key != NULL){
 					error = 1;
 					break;
 				}
@@ -220,7 +220,7 @@ clparser(int argc, char ** argv){
 
 			case 7:
 				printf("IV: %s\n", getValue(parser));
-				if(isSetCryptoPassKeyIv(encriptation) || isSetCryptoPassOrKey(encriptation) || keyIv.iv != NULL){
+				if(keyIv.iv != NULL){
 					error = 1;
 					break;
 				}
