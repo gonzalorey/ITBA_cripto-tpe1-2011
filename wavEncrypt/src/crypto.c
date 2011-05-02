@@ -120,8 +120,10 @@ int setCryptoPassOrKey(encryption_t * enc, passOrKey_t passOrKey) {
 int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 		dataHolder_t *target) {
 
-	if (!isCryptoValid(encryptation))
+	if (!isCryptoValid(encryptation)){
+		WARN("encryptation is not valid\n");
 		return 0;
+	}
 
 	//Key and IV holders
 	unsigned char key[EVP_MAX_KEY_LENGTH] = { 0 };
@@ -204,6 +206,20 @@ int isCryptoValid(encryption_t enc) {
 	return isSetCryptoAlgorithm(enc) && isSetCryptoCiphermode(enc)
 			&& isSetCryptoEncryptOrDecrypt(enc) && isSetCryptoPassOrKey(enc)
 			&& isSetCryptoPassKeyIv(enc);
+}
+
+void cryptoShowEnc(encryption_t enc){
+	printf("enc.algoritm = %d\n", enc.algorithm);
+	printf("enc.ciphermode = %d\n", enc.ciphermode);
+	printf("enc.encryptOrDecrypt = %d\n", enc.encrypOrDecrypt);
+	printf("enc.passOrKey = %d\n", enc.passOrKey);
+	if(enc.passOrKey == passOrKey_key){
+		printf("enc.passKeyIv.keyIv.key = %s\n", enc.passKeyIv.keyIv.key);
+		printf("enc.passKeyIv.keyIv.iv = %s\n", enc.passKeyIv.keyIv.iv);
+	}
+	if(enc.passOrKey == passOrKey_pass){
+		printf("enc.passKeyIv.password = %s\n", enc.passKeyIv.password);
+	}
 }
 
 static const EVP_CIPHER *getChiper(algorithm_t algorithm,

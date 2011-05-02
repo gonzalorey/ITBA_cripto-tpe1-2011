@@ -22,19 +22,42 @@
 #include "debug.h"
 
 void assertSizes();
+void showHelp();
 
 cryptoHolder_t * clparser(int argc, char ** argv);
 
 int main(int argc, char ** argv){
 	wav_t wav;
+	int err = 0;
 
 	cryptoHolder_t * cryptoHolder;
 	if((cryptoHolder = clparser(argc, argv)) == NULL)
 		return 0;
 
+	//Probamos que la arquitectura esta configurada correctamente.
+	assertSizes();
+
 	#ifdef RUNCRYPTOTESTS
 		cryptoRunTests();
 	#endif
+
+	if(!isCryptoValid(cryptoHolder->encription)){
+		ERROR("crypto structure is invalid\n");
+		err = 1;
+	}
+
+	if(cryptoHolder->sourceFile == NULL || strcmp(cryptoHolder->sourceFile, "") == 0){
+		ERROR("source file not specified\n");
+		err  = 1;
+	}
+
+	if(cryptoHolder->targetFile == NULL || strcmp(cryptoHolder->targetFile, "") == 0){
+			ERROR("target file not specified\n");
+			err  = 1;
+	}
+
+
+	//cryptoShowEnc(cryptoHolder->encription);
 
 	dataHolder_t target;
 	wav = newWavFromFile(cryptoHolder->sourceFile);
@@ -44,7 +67,10 @@ int main(int argc, char ** argv){
 	FMT_CK fmt = wavGetFMT(wav);
 	dataHolder_t soundData = wavGetData(wav);
 
-	int cryptoResult = crypto_Execute(cryptoHolder->encription, soundData, &target);
+	int cryptoResult = 0;
+	if (!err) {
+	 cryptoResult = crypto_Execute(cryptoHolder->encription, soundData, &target);
+	}
 	LOG("cryptoResult: %d\n", cryptoResult);
 	int result = 0;
 	if (cryptoResult != 0) {
@@ -64,7 +90,6 @@ int main(int argc, char ** argv){
 
 	LOG("Ended\n");
 	return result;
-
 }
 
 /**
@@ -82,7 +107,7 @@ cryptoHolder_t *
 clparser(int argc, char ** argv){
 	cryptoHolder_t * ans;
 
-	if((ans = malloc(sizeof(cryptoHolder_t))) == NULL)
+	if((ans = calloc(sizeof(cryptoHolder_t), 1)) == NULL)
 		return NULL;
 
 	parserADT parser = newParser(argc, argv);
@@ -107,19 +132,41 @@ clparser(int argc, char ** argv){
 	while(!noMoreArgs(parser) && !error){
 		switch (getArg(parser)) {
 			case 1:
+				LOG("reading source file\n");
 				printf("Source file: %s\n", getValue(parser));
-				if(ans->sourceFile != NULL || (ans->sourceFile = malloc(sizeof(char *) * strlen(getValue(parser)))) == NULL)
+
+				if(ans->sourceFile != NULL){
+					WARN("sourceFile already set\n");
 					error = 1;
+					break;
+				}
+
+				if((ans->sourceFile = malloc(sizeof(char) * (strlen(getValue(parser)) + 1))) == NULL) {
+					ERROR("mem alloc failed\n");
+					error = 1;
+					break;
+				}
 
 				strcpy(ans->sourceFile, getValue(parser));
+				LOG("finish reading source file\n");
 				break;
-
 			case 2:
+				LOG("reading target  file\n");
 				printf("Target file: %s\n", getValue(parser));
-				if(ans->targetFile != NULL || (ans->targetFile = malloc(sizeof(char *) * strlen(getValue(parser)))) == NULL)
-					error = 1;
 
+				if(ans->targetFile != NULL){
+					WARN("targetFile already set\n");
+					error = 1;
+					break;
+				}
+
+				if((ans->targetFile = malloc(sizeof(char) * (strlen(getValue(parser)) + 1))) == NULL) {
+					ERROR("mem alloc failed\n");
+					error = 1;
+					break;
+				}
 				strcpy(ans->targetFile, getValue(parser));
+				LOG("finish reading target file\n");
 				break;
 
 			case 3:
@@ -150,12 +197,13 @@ clparser(int argc, char ** argv){
 
 				// create the pass and set the encriptation
 				passKeyIv_t passKeyIv;
-				if((passKeyIv.password = malloc(sizeof(char) * strlen(getValue(parser)))) == NULL){
+				if((passKeyIv.password = malloc(sizeof(char) * (strlen(getValue(parser)) + 1))) == NULL){
+					ERROR("memory alloc failed\n");
 					error = 1;
 					break;
 				}
 
-				strcpy(passKeyIv.password, getValue(parser));
+				strcpy((char*)passKeyIv.password, getValue(parser));
 				setCryptoPassKeyIv(&encriptation, passKeyIv);
 				break;
 
@@ -166,12 +214,12 @@ clparser(int argc, char ** argv){
 					break;
 				}
 
-				if((keyIv.key = malloc(sizeof(char) * strlen(getValue(parser)))) == NULL){
+				if((keyIv.key = malloc(sizeof(char) * strlen(getValue(parser)) + 1)) == NULL){
 					error = 1;
 					break;
 				}
 
-				strcpy(keyIv.key, getValue(parser));
+				strcpy((char*)keyIv.key, getValue(parser));
 
 				if(keyIv.iv != NULL){
 					passKeyIv_t passKeyIv;
@@ -187,12 +235,12 @@ clparser(int argc, char ** argv){
 					break;
 				}
 
-				if((keyIv.iv = malloc(sizeof(char) * strlen(getValue(parser)))) == NULL){
+				if((keyIv.iv = malloc(sizeof(char) * strlen(getValue(parser)) + 1)) == NULL){
 					error = 1;
 					break;
 				}
 
-				strcpy(keyIv.iv, getValue(parser));
+				strcpy((char*)keyIv.iv, getValue(parser));
 
 				if(keyIv.key != NULL){
 					passKeyIv_t passKeyIv;
@@ -229,19 +277,23 @@ clparser(int argc, char ** argv){
 					error = 1;
 				else{
 					ciphermode_t cipher;
-					if(strcmp(getValue(parser), "ecb") == 0)
+					if(strcmp(getValue(parser), "ecb") == 0) {
+						LOG("ciphermode is ecb\n");
 						cipher = ciphermode_ecb;
-					else if(strcmp(getValue(parser), "cfb") == 0)
+					} else if(strcmp(getValue(parser), "cfb") == 0) {
 						cipher = ciphermode_cfb;
-					else if(strcmp(getValue(parser), "ofb") == 0)
+						LOG("ciphermode is cfb\n");
+					}else if(strcmp(getValue(parser), "ofb") == 0) {
 						cipher = ciphermode_ofb;
-					else if(strcmp(getValue(parser), "cbc") == 0)
+						LOG("ciphermode is ofb\n");
+					}else if(strcmp(getValue(parser), "cbc") == 0) {
 						cipher = ciphermode_cbc;
-					else{
+						LOG("ciphermode is cbc\n");
+					}else{
 						error = 1;
 						break;
 					}
-					setCryptoAlgorithm(&encriptation, cipher);
+					setCryptoCiphermode(&encriptation, cipher);
 				}
 				break;
 
@@ -250,6 +302,7 @@ clparser(int argc, char ** argv){
 				break;
 		}
 	}
+
 
 	if(error){
 		printf("ERROR\n");
@@ -261,4 +314,20 @@ clparser(int argc, char ** argv){
 	ans->encription = encriptation;
 
 	return ans;
+}
+
+
+void showHelp() {
+	printf("Help:\n");
+	printf("\tArguments:\n");
+	printf("\t\t-in <wav file> the file source\n");
+	printf("\t\t-out <wav file> file file target\n");
+	printf("\t\t-d for decrypt\n");
+	printf("\t\t-e for encrypt\n");
+	printf("\t\t-pass <password> for specificating the password for encrypt/decrypt\n");
+	printf("\t\t-K <key> for specifification the key for the algorithm. Usage with -iv\n");
+	printf("\t\t-iv <initVect> fror specification the initialition vector. Usage with -K");
+	printf("\t\t-a <aes128 | aes192 | aes256 | des> the algorithm for use in the encriptation/decryptation");
+	printf("\t\t-m <ecb | cfb | ofb | cbc> for specification of the cipher mode\n");
+	return;
 }

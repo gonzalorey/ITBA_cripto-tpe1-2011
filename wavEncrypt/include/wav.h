@@ -14,8 +14,8 @@ typedef struct wavCDT *wav_t;
 
 
 typedef struct {
-	CKID	chunkID;
-	CKSIZE	chunkSize;
+	CKID	chunkID;    //4
+	CKSIZE	chunkSize; //4
 	/* Common fields */
 	WORD	wFormatTag; // Format category,i.e.:PCM = 1 (no compres.)
 	WORD	wChannels; // Number of channels:1, mono; 2, stereo
@@ -23,6 +23,7 @@ typedef struct {
 	DWORD	dwAvgBytesPerSec;
 	WORD	wBlockAlign;
 	WORD	wBitsPerSample; //8, 16, etc.
+
 	WORD	extraParamSize;// If PCM, doesn't exist
 	BYTE	*extraParams;//space for extra params
 }FMT_CK;
