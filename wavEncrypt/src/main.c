@@ -46,20 +46,24 @@ int main(int argc, char ** argv){
 
 	int cryptoResult = crypto_Execute(cryptoHolder->encription, soundData, &target);
 	LOG("cryptoResult: %d\n", cryptoResult);
+	int result = 0;
+	if (cryptoResult != 0) {
 
-	wav_t wavAux = newWavFromData(fmt,target);
+		wav_t wavAux = newWavFromData(fmt,target);
 
-	int result = wavWriteToFile(wavAux, cryptoHolder->targetFile);
+		result = wavWriteToFile(wavAux, cryptoHolder->targetFile);
 
-	LOG("Save result: %s\n", (result)? "Success":"Fail");
+		LOG("Save result: %s\n", (result)? "Success":"Fail");
+		freeWav(wavAux);
+		return !result;
+	}
 
 	freeWavFMT(fmt);
 	dataHolderFree(soundData);
 	freeWav(wav);
-	freeWav(wavAux);
 
-	LOG("Ended");
-	return !result;
+	LOG("Ended\n");
+	return result;
 
 }
 
