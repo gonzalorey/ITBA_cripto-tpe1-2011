@@ -80,4 +80,6 @@ int setCryptoPassOrKey(encryption_t * enc, passOrKey_t passOrKey);
 
 int isCryptoValid(encryption_t enc);
 
+void cryptoShowEnc(encryption_t enc);
+
 #endif /* CRYPTO_H_ */

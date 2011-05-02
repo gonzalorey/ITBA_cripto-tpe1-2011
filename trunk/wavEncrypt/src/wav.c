@@ -52,6 +52,7 @@ static int saveRIFF(FILE *file, wav_t wav);
 static int saveFMT(FILE *file, wav_t wav);
 static int saveDATA(FILE *file, wav_t wav);
 
+static int fmtIsPCM(FMT_CK fmt);
 
 static int calcRiffSize(FMT_CK fmt, dataHolder_t data);
 
@@ -354,14 +355,21 @@ static int calcRiffSize(FMT_CK fmt, dataHolder_t data) {
 	int ret;
 
 	//Space from RIFF_CK
-	ret = sizeof(CKID); //format
+	ret = sizeof(CKID); //format 'WAVE' 4
 
 	//Space from FMT_CK
-	ret += sizeof(FMT_CK) - sizeof(BYTE*); //Pointer doesn't go to disk.
-	ret += fmt.extraParamSize; //Space of extra params.
+	ret += sizeof(FMT_CK) - (sizeof(BYTE*) + sizeof(WORD));
+	//Pointer doesn't go to disk, and we don't know if
+	//there are extra params.
+
+	if(fmtIsPCM(fmt)){
+		ret += sizeof(WORD); //Space for extraparams couter
+		ret += fmt.extraParamSize; //Space of extra params.
+	}
 
 	//Space from DATA_CK
-	ret += data.size;
+	ret += sizeof(CKID); //Header identifier 'data'
+	ret += data.size;	//Sound data
 
 	return ret;
 }
@@ -431,3 +439,7 @@ FMT_CK wavGetFMT(wav_t wav) {
 	return fmt;
 }
 
+
+static int fmtIsPCM(FMT_CK fmt) {
+	return fmt.wFormatTag == IS_PCM;
+}
