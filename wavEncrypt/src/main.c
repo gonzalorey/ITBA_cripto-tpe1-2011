@@ -26,13 +26,11 @@ void showHelp();
 
 cryptoHolder_t * clparser(int argc, char ** argv);
 
+int checkCryptoHolder(cryptoHolder_t *holder);
+
 int main(int argc, char ** argv){
 	wav_t wav;
 	int err = 0;
-
-	cryptoHolder_t * cryptoHolder;
-	if((cryptoHolder = clparser(argc, argv)) == NULL)
-		return 0;
 
 	//Probamos que la arquitectura esta configurada correctamente.
 	assertSizes();
@@ -41,23 +39,13 @@ int main(int argc, char ** argv){
 		cryptoRunTests();
 	#endif
 
-	if(!isCryptoValid(cryptoHolder->encription)){
-		ERROR("crypto structure is invalid\n");
-		err = 1;
+	cryptoHolder_t * cryptoHolder;
+
+
+	if((cryptoHolder = clparser(argc, argv)) == NULL || !checkCryptoHolder(cryptoHolder)) {
+		showHelp();
+		return 0;
 	}
-
-	if(cryptoHolder->sourceFile == NULL || strcmp(cryptoHolder->sourceFile, "") == 0){
-		ERROR("source file not specified\n");
-		err  = 1;
-	}
-
-	if(cryptoHolder->targetFile == NULL || strcmp(cryptoHolder->targetFile, "") == 0){
-			ERROR("target file not specified\n");
-			err  = 1;
-	}
-
-
-	//cryptoShowEnc(cryptoHolder->encription);
 
 	dataHolder_t target;
 	wav = newWavFromFile(cryptoHolder->sourceFile);
@@ -124,11 +112,13 @@ clparser(int argc, char ** argv){
 	setArg(parser, 7, "-iv", 0, 1, ARG_TYPE1, 0, NULL);
 	setArg(parser, 8, "-a", 0, 1, ARG_TYPE1, 4, aOpt);
 	setArg(parser, 9, "-m", 0, 1, ARG_TYPE1, 4, mOpt);
+	setArg(parser, 10, "-h", 0, 1, ARG_TYPE0, 0, NULL); //help
 
 	encryption_t encriptation = newEncryptation();
 
 	int error = 0;
 	keyIv_t keyIv = {NULL, NULL};
+	passOrKey_t passOrKey = -1;
 	while(!noMoreArgs(parser) && !error){
 		switch (getArg(parser)) {
 			case 1:
@@ -192,9 +182,6 @@ clparser(int argc, char ** argv){
 					break;
 				}
 
-				// set the encriptation to be with pass
-				setCryptoPassOrKey(&encriptation, passOrKey_pass);
-
 				// create the pass and set the encriptation
 				passKeyIv_t passKeyIv;
 				if((passKeyIv.password = malloc(sizeof(char) * (strlen(getValue(parser)) + 1))) == NULL){
@@ -203,6 +190,8 @@ clparser(int argc, char ** argv){
 					break;
 				}
 
+				passOrKey = passOrKey_pass;
+				setCryptoPassOrKey(&encriptation, passOrKey);
 				strcpy((char*)passKeyIv.password, getValue(parser));
 				setCryptoPassKeyIv(&encriptation, passKeyIv);
 				break;
@@ -226,6 +215,8 @@ clparser(int argc, char ** argv){
 					passKeyIv.keyIv = keyIv;
 					setCryptoPassKeyIv(&encriptation, passKeyIv);
 				}
+				passOrKey = passOrKey_key;
+				setCryptoPassOrKey(&encriptation, passOrKey);
 				break;
 
 			case 7:
@@ -248,7 +239,8 @@ clparser(int argc, char ** argv){
 					setCryptoPassKeyIv(&encriptation, passKeyIv);
 				}
 				break;
-
+				passOrKey = passOrKey_key;
+				setCryptoPassOrKey(&encriptation, passOrKey);
 			case 8:
 				printf("Encription algorithm: %s\n", getValue(parser));
 				if(isSetCryptoAlgorithm(encriptation))
@@ -297,6 +289,10 @@ clparser(int argc, char ** argv){
 				}
 				break;
 
+			case 10:
+				showHelp();
+				break;
+
 			default:
 				error = 1;
 				break;
@@ -320,14 +316,74 @@ clparser(int argc, char ** argv){
 void showHelp() {
 	printf("Help:\n");
 	printf("\tArguments:\n");
+	printf("\t\t-h shows this help\n");
 	printf("\t\t-in <wav file> the file source\n");
 	printf("\t\t-out <wav file> file file target\n");
 	printf("\t\t-d for decrypt\n");
 	printf("\t\t-e for encrypt\n");
 	printf("\t\t-pass <password> for specificating the password for encrypt/decrypt\n");
 	printf("\t\t-K <key> for specifification the key for the algorithm. Usage with -iv\n");
-	printf("\t\t-iv <initVect> fror specification the initialition vector. Usage with -K");
-	printf("\t\t-a <aes128 | aes192 | aes256 | des> the algorithm for use in the encriptation/decryptation");
+	printf("\t\t-iv <initVect> fror specification the initialition vector. Usage with -K\n");
+	printf("\t\t-a <aes128 | aes192 | aes256 | des> the algorithm for use in the encriptation/decryptation\n");
 	printf("\t\t-m <ecb | cfb | ofb | cbc> for specification of the cipher mode\n");
 	return;
+}
+
+
+int checkCryptoHolder(cryptoHolder_t *holder) {
+
+	char *seeHelp = "See the help with -h";
+
+	if(holder->sourceFile == NULL || (strcmp(holder->sourceFile, "") == 0)){
+		printf("sourceFile not set. %s\n", seeHelp);
+		return 0;
+	}
+
+	if(holder->targetFile == NULL || (strcmp(holder->targetFile, "") == 0)){
+		printf("targetFile not set. %s\n", seeHelp);
+		return 0;
+	}
+
+
+	if(!isSetCryptoAlgorithm(holder->encription)) {
+		printf("algorithm not set. %s\n", seeHelp);
+		return 0;
+	}
+
+	if(!isSetCryptoCiphermode(holder->encription)){
+		printf("ciphermode not set. %s\n", seeHelp);
+		return 0;
+	}
+
+	if(!isSetCryptoEncryptOrDecrypt(holder->encription)){
+		printf("encriptation/decription operation not set. %s\n", seeHelp);
+		return 0;
+	}
+
+	if(!isSetCryptoPassOrKey(holder->encription)){
+		printf("pass or key/iv usage not set.%s\n", seeHelp);
+		return 0;
+	}
+
+	if(holder->encription.passOrKey == passOrKey_key){
+		if(holder->encription.passKeyIv.keyIv.key == NULL || strcmp((char*)holder->encription.passKeyIv.keyIv.key, "") == 0){
+			printf("key not set. %s\n", seeHelp);
+			return 0;
+		}
+		if(holder->encription.passKeyIv.keyIv.iv == NULL || strcmp((char*)holder->encription.passKeyIv.keyIv.iv, "") == 0){
+			printf("iv not set. %s\n", seeHelp);
+			return 0;
+		}
+	}
+
+
+	if(holder->encription.passOrKey == passOrKey_pass){
+		if(holder->encription.passKeyIv.password == NULL || strcmp((char*)holder->encription.passKeyIv.password, "") == 0){
+			printf("password not set. %s\n", seeHelp);
+			return 0;
+		}
+	}
+
+
+	return 1;
 }
