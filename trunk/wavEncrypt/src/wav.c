@@ -353,25 +353,26 @@ wav_t newWavFromData(FMT_CK fmt_ck, dataHolder_t soundData) {
 }
 
 static int calcRiffSize(FMT_CK fmt, dataHolder_t data) {
-	int ret;
+	int ret = 0;
 
 	//Space from RIFF_CK
 	ret = sizeof(CKID); //format 'WAVE' 4
 
 	//Space from FMT_CK
-	ret += sizeof(FMT_CK) - (sizeof(BYTE*) + sizeof(WORD));
+	ret += (sizeof(FMT_CK) - ((sizeof(BYTE*) + (sizeof(WORD)))));
 	//Pointer doesn't go to disk, and we don't know if
 	//there are extra params.
 
-	if(fmtIsPCM(fmt)){
-		ret += sizeof(WORD); //Space for extraparams couter
+	if(!fmtIsPCM(fmt)){
+		LOG("fmt is not pcm\n");
+		ret += sizeof(WORD);
 		ret += fmt.extraParamSize; //Space of extra params.
 	}
 
 	//Space from DATA_CK
 	ret += sizeof(CKID); //Header identifier 'data'
+	ret += sizeof(CKSIZE); //Size of data
 	ret += data.size;	//Sound data
-
 	return ret;
 }
 

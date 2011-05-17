@@ -12,6 +12,8 @@
 
 typedef struct wavCDT *wav_t;
 
+#pragma pack(push)
+#pragma pack(1)
 
 typedef struct {
 	CKID	chunkID;    //4
@@ -28,6 +30,7 @@ typedef struct {
 	BYTE	*extraParams;//space for extra params
 }FMT_CK;
 
+#pragma pack(pop)
 
 wav_t newWavFromFile(char *path);
 
