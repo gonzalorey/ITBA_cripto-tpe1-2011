@@ -1,0 +1,9 @@
+Si se estenoga plano, se mete en la portadora:  sizeData || rawData || ext
+
+Donde sizeData es el tama–o de rawData, despues hay que contar .N bytes de la extensi—n \0
+
+Si se estenoga encriptado, se mete en la portadora
+	
+	sizeEncrypt || encrypt (sizeData || rawData || ext)
+	
+donde sizeEncrypt es el tama–o total de los datos encriptados...
