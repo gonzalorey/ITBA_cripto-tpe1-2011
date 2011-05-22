@@ -18,7 +18,7 @@
 
 //#define RUNCRYPTOTESTS
 
-#define DEBUG_WARN
+#define DEBUG_LOG
 #include "debug.h"
 
 void assertSizes();

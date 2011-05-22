@@ -6,13 +6,13 @@
 #include <openssl/evp.h>
 #include "macros.h"
 
-#define DEBUG_WARN
+#define DEBUG_LOG
 #include "debug.h"
 
 #define EMPTY -1
 
 #define EXTRA_SPACE 1024 //Extra space for algorithm... who knows?
-typedef int (*fncInit_t)(EVP_CIPHER_CTX*, const EVP_CIPHER*,
+typedef int (*fncInit_t)(EVP_CIPHER_CTX*, const EVP_CIPHER*,ENGINE *,
 		const unsigned char *, const unsigned char *);
 typedef int (*fncUpdate_t)(EVP_CIPHER_CTX*, unsigned char *, int *,
 		const unsigned char*, int);
@@ -132,6 +132,9 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	//Context holder
 	EVP_CIPHER_CTX ctx;
 
+	EVP_CIPHER_CTX_init(&ctx);
+	EVP_CIPHER_CTX_set_padding(&ctx, 0);
+
 	//Encrypt / Decrypt functions
 	fncInit_t fncInit;
 	fncUpdate_t fncUpdate;
@@ -163,26 +166,26 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	//Choose what to do... encrypt or decrypt?
 	if (encryptation.encrypOrDecrypt == encrypOrDecrypt_encrypt) {
 		LOG("Encryptation\n");
-		fncInit = EVP_EncryptInit;
+		fncInit = EVP_EncryptInit_ex;
 		fncUpdate = EVP_EncryptUpdate;
-		fncFinal = EVP_EncryptFinal;
+		fncFinal = EVP_EncryptFinal_ex;
 	} else {
 		LOG("Dencryptation\n");
-		fncInit = EVP_DecryptInit;
+		fncInit = EVP_DecryptInit_ex;
 		fncUpdate = EVP_DecryptUpdate;
-		fncFinal = EVP_DecryptFinal;
+		fncFinal = EVP_DecryptFinal_ex;
 	}
 
 	//Do what we came for
 	LOG("Init process\n");
-	fncInit(&ctx, getChiper(encryptation.algorithm, encryptation.ciphermode),
+	fncInit(&ctx, getChiper(encryptation.algorithm, encryptation.ciphermode), NULL,
 			key, iv);
 	LOG("Update process\n");
 	fncUpdate(&ctx, (unsigned char *) target->data, &target->size, source.data,
 			source.size);
 	LOG("Final process targetSize: %d\n", target->size);
 	LOG("Target offset for final: %p\n", target->data + target->size);
-	int extra; //How much extra of info we are using.
+	int extra = 0; //How much extra of info we are using.
 	fncFinal(&ctx, target->data + target->size, &extra);
 	LOG("Extra size: %d\n", extra);
 
