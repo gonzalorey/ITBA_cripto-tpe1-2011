@@ -13,7 +13,7 @@
 #include "types.h"
 #include "wavParser.h"
 
-#define DEBUG_WARN
+#define DEBUG_LOG
 #include "debug.h"
 
 
