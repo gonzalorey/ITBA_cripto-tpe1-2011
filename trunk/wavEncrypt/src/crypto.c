@@ -11,7 +11,7 @@
 
 #define EMPTY -1
 
-#define EXTRA_SPACE 1024 //Extra space for algorithm... who knows?
+#define EXTRA_SPACE 0 //Extra space for algorithm... who knows?
 typedef int (*fncInit_t)(EVP_CIPHER_CTX*, const EVP_CIPHER*,ENGINE *,
 		const unsigned char *, const unsigned char *);
 typedef int (*fncUpdate_t)(EVP_CIPHER_CTX*, unsigned char *, int *,
@@ -133,7 +133,6 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	EVP_CIPHER_CTX ctx;
 
 	EVP_CIPHER_CTX_init(&ctx);
-	EVP_CIPHER_CTX_set_padding(&ctx, 0);
 
 	//Encrypt / Decrypt functions
 	fncInit_t fncInit;
@@ -143,6 +142,7 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	long allocatedSize; //The data size of memory allocated;
 
 	//Getting enogth space for result
+	LOG("source.size: %d\n", source.size);
 	if ((target->data = malloc(source.size + EXTRA_SPACE)) == NULL) {
 		ERROR("Memory Allocation failed\n");
 		return 0;
@@ -180,6 +180,7 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 	LOG("Init process\n");
 	fncInit(&ctx, getChiper(encryptation.algorithm, encryptation.ciphermode), NULL,
 			key, iv);
+	EVP_CIPHER_CTX_set_padding(&ctx, 0);
 	LOG("Update process\n");
 	fncUpdate(&ctx, (unsigned char *) target->data, &target->size, source.data,
 			source.size);
