@@ -392,6 +392,8 @@ dataHolder_t wavGetData(wav_t wav) {
 	if((holder.data = malloc(wav->data.chunkSize)) == NULL){
 		ERROR("Data alloc failed\n");
 		return holder;
+	} else {
+		LOG("wavGetData malloc : %p\n", holder.data);
 	}
 
 	holder.size = wav->data.chunkSize;
