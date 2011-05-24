@@ -1,46 +1,159 @@
 /* stegano.c */
 
+#include <stdlib.h>
+#include <string.h>
+
 #include "types.h"
 #include "stegano.h"
+#include "bitArray.h"
+
+#define DEBUG_LOG
+#include "debug.h"
 
 #include "macros.h"
 
 #define BITS_PER_BYTE 8
 #define BLOCK_SIZE 2
 
-stegResult_t stegEmbed(void *carrier, long carrierSize, void *message, long messageSize, stegMode_t mode) {
-	return stegResult_fail;
 
-}
+static int getPayloadSize(BYTE *carrier);
 
+static void writePayloadSize(BYTE *carrier, int size);
+static void writePayloadData(BYTE *carrier, BYTE *payload, long bits);
+static void writePayloadExtention(int dataOffset, BYTE* carrier, char *extention);
 
-static stegResult_t stegEmbedLSB(byte *carrier, long carrierSize, byte *message, long messageSize){
+static stegResult_t stegEmbedLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention);
+static stegResult_t	stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention);
 
-	long bits = getSizeInBits(messageSize);
-	long i;
+stegResult_t stegEmbed(dataHolder_t *carrier, dataHolder_t *payload, stegMode_t mode, char *extention) {
 
-	for(i = 0; i < bits ; i++){
-		BIT_CLEAR(carrier[i*BLOCKSIZE+1], 0);
-		if(BIT_CHECK(bitArrayGet(carrier, i), 0)){
-			BIT_SET(carrier[i*BLOCKSIZE+1], 1);
-		}
+	switch (mode) {
+	case stegMode_LSB:
+		return stegEmbedLSB(carrier, payload, extention);
+		break;
+	case stegMode_LSB4:
+	case stegMode_LSBE:
+		return stegResult_fail;
 
 	}
+	return stegResult_fail;
+}
+
+stegResult_t stegExtract(dataHolder_t *carrier, dataHolder_t *payload, stegMode_t mode, char *extention) {
+	switch (mode) {
+	case stegMode_LSB:
+		return stegExtractLSB(carrier, payload, extention);
+		break;
+	case stegMode_LSB4:
+	case stegMode_LSBE:
+		return stegResult_fail;
+
+	}
+	return stegResult_fail;
+}
+
+static stegResult_t stegEmbedLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention) {
+
+	LOG("stegEmbedLSB((%x, %d), (%x, %d), %s)\n", carrier->data, carrier->size, payload->data, payload->size, STR_NULL(extention));
+	long bits = BITS_PER_BYTE*payload->size;
+	LOG("data bits: %ld\n", bits);
+
+	writePayloadSize(carrier->data, payload->size);
+
+	writePayloadData(carrier->data, payload->data, bits);
+
+	//if(extention != NULL){
+	//	writePayloadExtention(sizeof(DWORD)+(payload->size), carrier->data, extention);
+	//}
+
 
 	return stegResult_Success;
 }
 
-static void stegEmbedLSBDWORD(byte *carrier, DWORD *data, long *offset){
+static stegResult_t stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention) {
+	int sizeOffset = BITS_PER_BYTE * sizeof(DWORD);
+	long i;
+	int size;
 
-	int bits = sizeof(DWORD)*BITS_PER_BYTE;
+
+	LOG("reading payloadSize\n");
+	size = getPayloadSize(carrier->data);
+	LOG("payload size: %d\n", size);
+
+	if ((payload->data = (BYTE*) malloc(size)) == NULL) {
+		return stegResult_memoryFail;
+	}
+
+	for (i = sizeOffset; i < size * BITS_PER_BYTE; i++) {
+		bitArraySet(payload->data, i, BIT_GET(carrier->data[i*BLOCK_SIZE+1], 0));
+	}
+	return stegResult_Success;
+
+}
+
+static void writePayloadSize(BYTE *carrier, int size){
+	LOG("writePayloadSize(%x, %d)\n", carrier, size);
 	int i;
 
-	for(i = 0 ; i < bits ; i++, (*offset)++){
-		BIT_CLEAR(carrier[offset*BLOCKSIZE+1], 0);
-		if(BIT_CHECK(bitArrayGet(data, i), 0)){
-			BIT_SET(carrier[i*BLOCKSIZE+1], 1);
+	for(i = 0 ; i < sizeof(DWORD)*BITS_PER_BYTE ; i++){
+		if(bitArrayGet((BYTE*)&size, sizeof(DWORD)*BITS_PER_BYTE - (i + 1))){
+			carrier[i*BLOCK_SIZE+1] |= 0x1;
+		} else {
+			carrier[i*BLOCK_SIZE+1] &= ~0x1;
 		}
+	}
+}
+
+static void writePayloadData(BYTE *carrier, BYTE *payload, long bits) {
+	LOG("writePayloadData(%p, %p, %ld)\n", carrier, payload, bits);
+	long sizeOffset = BITS_PER_BYTE * sizeof(DWORD);
+	LOG("sizeOffset: %ld\n", sizeOffset);
+	long i;
+
+	for (i = 0; i < bits; i++) {
+		if (bitArrayGet(payload, i)) {
+			carrier[(i+sizeOffset)*BLOCK_SIZE+1] |= 0x1; //Set bit
+			printf("1");
+		} else {
+			carrier[(i+sizeOffset)*BLOCK_SIZE+1] &= ~0x1; //Clear bit
+			printf("0");
+		}
+	}
+	putchar('\n');
+}
+
+static void writePayloadExtention(int dataOffset, BYTE* carrier, char *extention){
+	int len = strlen(extention) + 1;
+	int lenBits = len*BITS_PER_BYTE;
+	long i;
+
+	for(i = 0; i < lenBits ; i++, dataOffset++){
+		if(bitArrayGet((BYTE*)extention, i)) {
+			BIT_SET(carrier[dataOffset*BLOCK_SIZE+1], 0);
+		} else {
+			BIT_CLEAR(carrier[dataOffset*BLOCK_SIZE+1], 0);
+		}
+	}
+}
+
+static int getPayloadSize(BYTE *carrier) {
+	LOG("getPayloadSize(%p)\n", carrier);
+	int i;
+	int ret = 0;
+
+	for(i = 0 ; i < sizeof(DWORD)*BITS_PER_BYTE*2 ; i++){
+		printf("%x ", carrier[i]);
 	}
 
 
+	for(i = 0 ; i < sizeof(DWORD)*BITS_PER_BYTE ; i++){
+		if(carrier[i*BLOCK_SIZE+1] & 0x1){
+			BIT_SET(ret, sizeof(DWORD)*BITS_PER_BYTE - (i + 1));
+			LOG("bit %d is 1\n", sizeof(DWORD)*BITS_PER_BYTE - (i + 1));
+		} else {
+			LOG("bit %d is 0\n", sizeof(DWORD)*BITS_PER_BYTE - (i + 1));
+		}
+	}
+	return ret;
 }
+

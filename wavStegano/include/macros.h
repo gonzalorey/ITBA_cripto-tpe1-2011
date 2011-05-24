@@ -7,6 +7,9 @@
 #define BIT_SET(a,b) ((a) |= (1<<(b)))
 #define BIT_CLEAR(a,b) ((a) &= ~(1<<(b)))
 #define BIT_FLIP(a,b) ((a) ^= (1<<(b)))
-#define BIT_CHECK(a,b) ((a) & (1<<(b)))
+#define BIT_GET(a,b) ((a) & (1<<(b)))
+
+
+#define STR_NULL(x) (((x) == NULL)? "(null)" : (x))
 
 #endif /* MACROS_H_ */
