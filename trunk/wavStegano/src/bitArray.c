@@ -34,3 +34,19 @@ void bitArraySetBYTE(BYTE *value, int idx, int flag){
 		*value &= ~(0x80 >> idx);
 	}
 }
+
+int getFourLeastSignificantDWORD(DWORD value, int byte){
+	return (value >> (byte * 8)) & 0xF;
+}
+
+int getFourMostSignificantDWORD(DWORD value, int byte){
+	return (value >> (byte * 8 + 4)) & 0xF;
+}
+
+int bitArrayGetFourLeastSignificant(BYTE * array, int byte){
+	return array[byte] & 0xF;
+}
+
+int bitArrayGetFourMostSignificant(BYTE * array, int byte){
+	return (array[byte] >> 4) & 0xF;
+}
