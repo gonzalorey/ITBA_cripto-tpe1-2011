@@ -12,7 +12,7 @@
 #include "wav.h"
 #include "types.h"
 
-#define DEBUG_LOG
+#define DEBUG_WARN
 #include "debug.h"
 
 

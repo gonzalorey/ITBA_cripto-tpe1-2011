@@ -26,3 +26,11 @@ int bitArrayGet(BYTE *array, long index) {
 int bitArrayGetDWORD(DWORD value, int idx){
 	return value & (0x80000000 >> idx);
 }
+
+void bitArraySetBYTE(BYTE *value, int idx, int flag){
+	if (flag) {
+		*value |= (0x80 >> idx);
+	} else {
+		*value &= ~(0x80 >> idx);
+	}
+}

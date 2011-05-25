@@ -15,12 +15,15 @@
 #define BITS_PER_BYTE 8
 #define BLOCK_SIZE 2
 
+#define MAX_FILE_EXTENTION 8
 
 static int getPayloadSize(BYTE *carrier);
 
-static void writePayloadSize(BYTE *carrier, int size);
-static void writePayloadData(BYTE *carrier, BYTE *payload, long bits);
-static void writePayloadExtention(int dataOffset, BYTE* carrier, char *extention);
+static void writePayloadSizeLSB(BYTE *carrier, int size);
+static void writePayloadDataLSB(BYTE *carrier, int offset, BYTE *payload, long bits);
+
+static char getByteLSB(int *offset, BYTE *carrier);
+
 
 static stegResult_t stegEmbedLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention);
 static stegResult_t	stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention);
@@ -54,17 +57,17 @@ stegResult_t stegExtract(dataHolder_t *carrier, dataHolder_t *payload, stegMode_
 
 static stegResult_t stegEmbedLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention) {
 
-	LOG("stegEmbedLSB((%x, %d), (%x, %d), %s)\n", carrier->data, carrier->size, payload->data, payload->size, STR_NULL(extention));
+	LOG("stegEmbedLSB((%p, %d), (%p, %d), %s)\n", carrier->data, carrier->size, payload->data, payload->size, STR_NULL(extention));
 	long bits = BITS_PER_BYTE*payload->size;
 	LOG("data bits: %ld\n", bits);
 
-	writePayloadSize(carrier->data, payload->size);
+	writePayloadSizeLSB(carrier->data, payload->size);
 
-	writePayloadData(carrier->data, payload->data, bits);
+	writePayloadDataLSB(carrier->data, sizeof(DWORD)*BITS_PER_BYTE,  payload->data, bits);
 
-	//if(extention != NULL){
-	//	writePayloadExtention(sizeof(DWORD)+(payload->size), carrier->data, extention);
-	//}
+	if(extention != NULL){
+		writePayloadDataLSB(carrier->data, (sizeof(DWORD) + payload->size)*BITS_PER_BYTE,(BYTE*) extention, (strlen(extention)+1)*BITS_PER_BYTE);
+	}
 
 
 	return stegResult_Success;
@@ -78,6 +81,7 @@ static stegResult_t stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload,
 
 	LOG("reading payloadSize\n");
 	size = getPayloadSize(carrier->data);
+	payload->size = size;
 	LOG("payload size: %d\n", size);
 
 	if ((payload->data = (BYTE*) malloc(size)) == NULL) {
@@ -86,63 +90,75 @@ static stegResult_t stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload,
 
 	for (i = 0; i < size * BITS_PER_BYTE; i++) {
 		bitArraySet(payload->data, i, carrier->data[(i+sizeOffset)*BLOCK_SIZE+1] & 0x1);
-		printf("%d", carrier->data[(i+sizeOffset)*BLOCK_SIZE+1] & 0x1);
 	}
-	putchar('\n');
 
-	for (i = 0 ; i < size ; i++){
-		printf("%c", payload->data[i]);
+	if(extention != NULL){
+		int offset = (sizeof(DWORD)+payload->size)*BITS_PER_BYTE;
+		char val;
+		i = 0;
+		if((val = getByteLSB(&offset, carrier->data)) != '.'){
+			WARN("Looking for extention, but '.' is not there...\n");
+			free(payload->data);
+			payload->data = NULL;
+			return stegResult_fail;
+		} else {
+			extention[i++] = val;
+			do {
+				val = getByteLSB(&offset, carrier->data);
+				extention[i++] = val;
+			}while(val != 0 && i < MAX_FILE_EXTENTION);
+
+			if(val != 0){
+				WARN("Not found Null termination in extention\n");
+				free(payload->data);
+				payload->data = NULL;
+				return stegResult_fail;
+			}
+		}
+
 	}
-	putchar('\n');
+
 
 	return stegResult_Success;
 
 }
 
-static void writePayloadSize(BYTE *carrier, int size){
+static char getByteLSB(int *offset, BYTE *carrier) {
+	char ret = 0;
+	int bits = sizeof(char)*BITS_PER_BYTE;
+	int i;
+	for(i = 0 ; i < bits ; i++){
+		if(carrier[(i+*offset)*BLOCK_SIZE+1] & 0x1){
+			bitArraySetBYTE((BYTE*)&ret, i, 1);
+		}
+	}
+	*offset += i;
+	return ret;
+}
+
+static void writePayloadSizeLSB(BYTE *carrier, int size){
 	LOG("writePayloadSize(%p, %d)\n", carrier, size);
 	int i;
 
 	for(i = 0 ; i < sizeof(DWORD)*BITS_PER_BYTE ; i++){
 		if(bitArrayGetDWORD(size, i)){
 			carrier[i*BLOCK_SIZE+1] |= 0x1;
-			printf("1");
 		} else {
 			carrier[i*BLOCK_SIZE+1] &= ~0x1;
-			printf("0");
 		}
 	}
-	putchar('\n');
 }
 
-static void writePayloadData(BYTE *carrier, BYTE *payload, long bits) {
-	LOG("writePayloadData(%p, %p, %ld)\n", carrier, payload, bits);
-	long sizeOffset = BITS_PER_BYTE * sizeof(DWORD);
-	LOG("sizeOffset: %ld\n", sizeOffset);
+static void writePayloadDataLSB(BYTE *carrier, int offset, BYTE *payload, long bits) {
+	LOG("writePayloadData(%p, %d, %p, %ld)\n", carrier, offset, payload, bits);
+	LOG("sizeOffset: %d\n", offset);
 	long i;
 
 	for (i = 0; i < bits; i++) {
 		if (bitArrayGet(payload, i)) {
-			carrier[(i+sizeOffset)*BLOCK_SIZE+1] |= 0x1; //Set bit
-			printf("1");
+			carrier[(i+offset)*BLOCK_SIZE+1] |= 0x1; //Set bit
 		} else {
-			carrier[(i+sizeOffset)*BLOCK_SIZE+1] &= ~0x1; //Clear bit
-			printf("0");
-		}
-	}
-	putchar('\n');
-}
-
-static void writePayloadExtention(int dataOffset, BYTE* carrier, char *extention){
-	int len = strlen(extention) + 1;
-	int lenBits = len*BITS_PER_BYTE;
-	long i;
-
-	for(i = 0; i < lenBits ; i++, dataOffset++){
-		if(bitArrayGet((BYTE*)extention, i)) {
-			BIT_SET(carrier[dataOffset*BLOCK_SIZE+1], 0);
-		} else {
-			BIT_CLEAR(carrier[dataOffset*BLOCK_SIZE+1], 0);
+			carrier[(i+offset)*BLOCK_SIZE+1] &= ~0x1; //Clear bit
 		}
 	}
 }
@@ -152,17 +168,10 @@ static int getPayloadSize(BYTE *carrier) {
 	int i;
 	int ret = 0;
 
-	for(i = 0 ; i < sizeof(DWORD)*BITS_PER_BYTE*2 ; i++){
-		printf("%x ", carrier[i]);
-	}
-
-
 	for(i = 0 ; i < sizeof(DWORD)*BITS_PER_BYTE ; i++){
 		if(carrier[i*BLOCK_SIZE+1] & 0x1){
 			BIT_SET(ret, sizeof(DWORD)*BITS_PER_BYTE - (i + 1));
-			LOG("bit %d is 1\n", sizeof(DWORD)*BITS_PER_BYTE - (i + 1));
 		} else {
-			LOG("bit %d is 0\n", sizeof(DWORD)*BITS_PER_BYTE - (i + 1));
 		}
 	}
 	return ret;
