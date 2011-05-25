@@ -10,6 +10,8 @@
 #define BIT_GET(a,b) ((a) & (1<<(b)))
 
 
+#define LOWER(x, y)	(((x) < (y))? (x) : (y))
+
 #define STR_NULL(x) (((x) == NULL)? "(null)" : (x))
 
 #endif /* MACROS_H_ */
