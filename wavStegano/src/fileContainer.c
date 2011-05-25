@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <string.h>
 
 #include "fileContainer.h"
 
@@ -44,6 +45,8 @@ int FCRead(char *path, fileContainer_t *container) {
 int FCWrite(char *path, fileContainer_t *container) {
 	FILE *target;
 	int result = 0;
+
+	strcat(path, container->extension);
 
 	if((target = fopen(path, "w")) != NULL) {
 		if(fwrite(container->rawData, container->size, 1, target) != 0){
