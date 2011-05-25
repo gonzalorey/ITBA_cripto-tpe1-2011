@@ -84,11 +84,17 @@ static stegResult_t stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload,
 		return stegResult_memoryFail;
 	}
 
-	for (i = sizeOffset; i < size * BITS_PER_BYTE; i++) {
-		bitArraySet(payload->data, i, BIT_GET(carrier->data[i*BLOCK_SIZE+1], 0));
-		printf("%d", BIT_GET(carrier->data[i*BLOCK_SIZE+1], 0));
+	for (i = 0; i < size * BITS_PER_BYTE; i++) {
+		bitArraySet(payload->data, i, carrier->data[(i+sizeOffset)*BLOCK_SIZE+1] & 0x1);
+		printf("%d", carrier->data[(i+sizeOffset)*BLOCK_SIZE+1] & 0x1);
 	}
 	putchar('\n');
+
+	for (i = 0 ; i < size ; i++){
+		printf("%c", payload->data[i]);
+	}
+	putchar('\n');
+
 	return stegResult_Success;
 
 }
