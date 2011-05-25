@@ -6,4 +6,52 @@ Si se estenoga encriptado, se mete en la portadora
 	
 	sizeEncrypt || encrypt (sizeData || rawData || ext)
 	
-donde sizeEncrypt es el tamanio total de los datos encriptados...
+donde sizeEncrypt es el tama–o total de los datos encriptados...
+
+
+
+0x60517F0A & 0x0000000F = A
+0x000F0000
+0x00010000 >> 4*4 = 0x1
+
+0xF0000000 >> 3*4 == 0x000F0000
+
+1010
+1111
+
+1010
+
+------------------------------------------------------------------------------------------------
+/* Para probar LSB1, el programa recive un archivo, un indice y la cantidad de bits que tiene
+que dumpear.  Para los otros usar esta idea. */
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int argc, char *argv[]){
+	
+	short int sample;
+	int max, i = 0;
+	int idx = atoi(argv[3]);
+	
+	
+	FILE *file = fopen(argv[1], "r");
+	fseek(file, idx, SEEK_SET);
+	max = atoi(argv[2]);
+	
+	
+	while((fread(&sample, sizeof(short int), 1, file) != 0) && i < max){
+		if(sample & 0x1){
+			putchar('1');
+		} else {
+			putchar('0');
+		}
+		i++;
+	}
+	putchar('\n');
+	fclose(file);
+	
+	return 0;
+}
+------------------------------------------------------------------------------------------------
+
+donde sizeEncrypt es el tamanio total de los datos encriptados...>>>>>>> .r63
