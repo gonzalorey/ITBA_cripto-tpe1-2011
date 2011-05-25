@@ -86,22 +86,27 @@ static stegResult_t stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload,
 
 	for (i = sizeOffset; i < size * BITS_PER_BYTE; i++) {
 		bitArraySet(payload->data, i, BIT_GET(carrier->data[i*BLOCK_SIZE+1], 0));
+		printf("%d", BIT_GET(carrier->data[i*BLOCK_SIZE+1], 0));
 	}
+	putchar('\n');
 	return stegResult_Success;
 
 }
 
 static void writePayloadSize(BYTE *carrier, int size){
-	LOG("writePayloadSize(%x, %d)\n", carrier, size);
+	LOG("writePayloadSize(%p, %d)\n", carrier, size);
 	int i;
 
 	for(i = 0 ; i < sizeof(DWORD)*BITS_PER_BYTE ; i++){
-		if(bitArrayGet((BYTE*)&size, sizeof(DWORD)*BITS_PER_BYTE - (i + 1))){
+		if(bitArrayGetDWORD(size, i)){
 			carrier[i*BLOCK_SIZE+1] |= 0x1;
+			printf("1");
 		} else {
 			carrier[i*BLOCK_SIZE+1] &= ~0x1;
+			printf("0");
 		}
 	}
+	putchar('\n');
 }
 
 static void writePayloadData(BYTE *carrier, BYTE *payload, long bits) {
