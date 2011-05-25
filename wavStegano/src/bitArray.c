@@ -10,9 +10,9 @@ void bitArraySet(BYTE *array, long index, int value) {
 	int bitIndex = index % 8;
 
 	if(value) {
-		BIT_SET(array[byteIndex], bitIndex);
+		array[byteIndex] |= (0x80 >> bitIndex);
 	} else {
-		BIT_CLEAR(array[byteIndex], bitIndex);
+		array[byteIndex] &= ~(0x80 >> bitIndex);
 	}
 }
 
