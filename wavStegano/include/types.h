@@ -7,6 +7,7 @@
 #ifndef TYPES_H_
 #define TYPES_H_
 
+typedef unsigned long long QWORD;
 typedef unsigned int DWORD;
 typedef unsigned short int WORD;
 typedef unsigned char BYTE;

@@ -20,5 +20,9 @@ int bitArrayGet(BYTE *array, long index) {
 	int byteIndex = index/8;
 	int bitIndex = index % 8;
 
-	return 	array[byteIndex] & (0x8 >> bitIndex);
+	return 	array[byteIndex] & (0x80 >> bitIndex);
+}
+
+int bitArrayGetDWORD(DWORD value, int idx){
+	return value & (0x80000000 >> idx);
 }
