@@ -25,9 +25,14 @@ static void writePayloadDataLSB(BYTE *carrier, int offset, BYTE *payload, long b
 
 static char getByteLSB(int *offset, BYTE *carrier);
 
-
 static stegResult_t stegEmbedLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention);
 static stegResult_t	stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention);
+
+static int writePayloadSizeLSBEnhanced(BYTE *carrier, int * offset, int carrierSize, int size);
+static int writePayloadDataLSBEnhanced(BYTE *carrier, int * offset, int carrierSize, BYTE *payload, long bits);
+
+static stegResult_t stegEmbedLSBEnhanced(dataHolder_t *carrier, dataHolder_t *payload, char *extention);
+static stegResult_t	stegExtractLSBEnhanced(dataHolder_t *carrier, dataHolder_t *payload, char *extention);
 
 /*
  * LSB4
@@ -47,9 +52,9 @@ stegResult_t stegEmbed(dataHolder_t *carrier, dataHolder_t *payload, stegMode_t 
 		return stegEmbedLSB(carrier, payload, extention);
 		break;
 	case stegMode_LSB4:
-	case stegMode_LSBE:
-		return stegResult_fail;
 
+	case stegMode_LSBE:
+		return stegEmbedLSBEnhanced(carrier, payload, extention);
 	}
 	return stegResult_fail;
 }
@@ -61,7 +66,7 @@ stegResult_t stegExtract(dataHolder_t *carrier, dataHolder_t *payload, stegMode_
 		break;
 	case stegMode_LSB4:
 	case stegMode_LSBE:
-		return stegResult_fail;
+		return stegExtractLSBEnhanced(carrier, payload, extention);
 
 	}
 	return stegResult_fail;
@@ -89,7 +94,6 @@ static stegResult_t stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload,
 	int sizeOffset = BITS_PER_BYTE * sizeof(DWORD);
 	long i;
 	int size;
-
 
 	LOG("reading payloadSize\n");
 	size = getPayloadSizeLSB(carrier->data);
@@ -130,9 +134,7 @@ static stegResult_t stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload,
 
 	}
 
-
 	return stegResult_Success;
-
 }
 
 static char getByteLSB(int *offset, BYTE *carrier) {
@@ -183,12 +185,179 @@ static int getPayloadSizeLSB(BYTE *carrier) {
 	for(i = 0 ; i < sizeof(DWORD)*BITS_PER_BYTE ; i++){
 		if(carrier[i*BLOCK_SIZE+1] & 0x1){
 			BIT_SET(ret, sizeof(DWORD)*BITS_PER_BYTE - (i + 1));
-		} else {
 		}
 	}
 	return ret;
 }
 
+/**
+ * LSB ENHANCED
+ */
+static stegResult_t stegEmbedLSBEnhanced(dataHolder_t *carrier, dataHolder_t *payload, char *extention) {
+	long bits = BITS_PER_BYTE*payload->size;
+	int offset = 0;
+
+	writePayloadSizeLSBEnhanced(carrier->data, &offset, carrier->size, payload->size);
+	writePayloadDataLSBEnhanced(carrier->data, &offset, carrier->size, payload->data, bits);
+
+	if(extention != NULL) {
+		writePayloadDataLSBEnhanced(carrier->data, &offset, carrier->size, (BYTE*) extention, (strlen(extention)+1)*BITS_PER_BYTE);
+	}
+
+	return stegResult_Success;
+}
+
+static int getPayloadSizeEnhanced(dataHolder_t *carrier, int * offset) {
+	LOG("getPayloadSize(%p)\n", carrier->data);
+	int i, j = 0;
+	int ret = 0;
+
+	for(i = *offset ; i < carrier->size && j != sizeof(DWORD)*BITS_PER_BYTE ; i++) {
+		if (carrier->data[i*BLOCK_SIZE] == 0xFF || carrier->data[i*BLOCK_SIZE] == 0xFE) {
+			if (carrier->data[i*BLOCK_SIZE] & 0x1) {
+				BIT_SET(ret, sizeof(DWORD)*BITS_PER_BYTE - (j + 1));
+			}
+			j++;
+		}
+	}
+	*offset += i;
+	return ret;
+}
+
+static BYTE * getPayloadDataEnhanced (dataHolder_t *carrier, int * offset, int payloadSize) {
+	int i, j = 0;
+	BYTE * data;
+
+	if ((data = calloc (1, sizeof(BYTE) * payloadSize)) == NULL) {
+		return NULL;
+	}
+
+	for(i = *offset ; i < carrier->size && j != sizeof(DWORD)*BITS_PER_BYTE ; i++) {
+		if (carrier->data[i*BLOCK_SIZE] == 0xFF || carrier->data[i*BLOCK_SIZE] == 0xFE) {
+			if (carrier->data[i*BLOCK_SIZE] & 0x1) {
+				bitArraySet(data, payloadSize*BITS_PER_BYTE - (j + 1), 1);
+			}
+			j++;
+		}
+	}
+
+	*offset += i;
+	return data;
+}
+
+static char getByteLSBEnhanced(int *offset, dataHolder_t *carrier) {
+	char ret = 0;
+	int bits = sizeof(char)*BITS_PER_BYTE, i, j;
+	for (i = 0; i < carrier->size; i++) {
+		if (carrier->data[(i+(*offset))*BLOCK_SIZE] == 0xFE || carrier->data[(i+(*offset))*BLOCK_SIZE] == 0xFF) {
+			for (j = 0; j < bits; j++) {
+				if (carrier->data[(i+(*offset))*BLOCK_SIZE] & 0x1) {
+					bitArraySetBYTE((BYTE*)&ret, j, 1);
+				}
+			}
+		}
+	}
+	*offset += i;
+	return ret;
+}
+
+static stegResult_t	stegExtractLSBEnhanced(dataHolder_t *carrier, dataHolder_t *payload, char *extention) {
+	long i;
+	int size, offset = 0;
+
+	LOG("reading payloadSize\n");
+	size = getPayloadSizeEnhanced(carrier, &offset);
+	payload->size = size;
+	LOG("payload size: %d\n", size);
+
+	if ((payload->data = (BYTE*) malloc(size)) == NULL) {
+		return stegResult_memoryFail;
+	}
+
+	if ((payload->data = getPayloadDataEnhanced (carrier, &offset, payload->size)) == NULL) {
+		return stegResult_memoryFail;
+	}
+
+	if(extention != NULL){
+		char val;
+		i = 0;
+		if((val = getByteLSBEnhanced(&offset, carrier)) != '.'){
+			WARN("Looking for extention, but '.' is not there...\n");
+			free(payload->data);
+			payload->data = NULL;
+			return stegResult_fail;
+		} else {
+			extention[i++] = val;
+			do {
+				val = getByteLSBEnhanced(&offset, carrier);
+				extention[i++] = val;
+			}while(val != 0 && i < MAX_FILE_EXTENTION);
+
+			if(val != 0){
+				WARN("Not found Null termination in extention\n");
+				free(payload->data);
+				payload->data = NULL;
+				return stegResult_fail;
+			}
+		}
+
+	}
+
+	return stegResult_Success;
+}
+
+static int writePayloadSizeLSBEnhanced(BYTE *carrier, int * offset, int carrierSize, int size) {
+	LOG("writePayloadSize(%p, %d)\n", carrier, size);
+	long i, j = 0;
+
+	for (i = 0; i < carrierSize && j != sizeof(DWORD)*BITS_PER_BYTE; i++) {
+		if (carrier[(i+(*offset))*BLOCK_SIZE] == 0xFE || carrier[(i+(*offset))*BLOCK_SIZE] == 0xFF) {
+			if (bitArrayGetDWORD(size, i)) {
+				carrier[i*BLOCK_SIZE] |= 0x1;
+			} else {
+				carrier[i*BLOCK_SIZE] &= ~0x1;
+			}
+			j++;
+		}
+	}
+
+	if (i == carrierSize) {
+		/* El payload no entra en el carrie */
+		return 1;
+	}
+
+	*offset += i;
+	/* Si se pudieron escribir los 32 bits devuelve 1 ya que se oculto satisfactoriamente la longitud del
+	 * payload dentro del carrier.
+	 */
+	return (j == sizeof(DWORD)*BITS_PER_BYTE);
+}
+
+static int writePayloadDataLSBEnhanced(BYTE *carrier, int * offset, int carrierSize, BYTE *payload, long bits) {
+	LOG("writePayloadDataLSBEnhanced(%p, %d, %p, %ld)\n", carrier, *offset, payload, bits);
+	LOG("sizeOffset: %d\n", *offset);
+	long i, j = 0;
+
+	for (i = 0; i < carrierSize && j != bits; i++) {
+		if (carrier[(i+(*offset))*BLOCK_SIZE] == 0xFE || carrier[(i+(*offset))*BLOCK_SIZE] == 0xFF) {
+			if (bitArrayGet(payload, i)) {
+				carrier[(i+(*offset))*BLOCK_SIZE] |= 0x1; //Set bit
+			} else {
+				carrier[(i+(*offset))*BLOCK_SIZE] &= ~0x1; //Clear bit
+			}
+			j++;
+		}
+	}
+
+	if (i == carrierSize) {
+		/* El payload no entra en el carrie */
+		return 1;
+	}
+
+	*offset += i;
+	/* Se espera que (j == bits) sea verdadero */
+	return (j == bits);
+}
 
 /*********************************************************************/
 /**************************  LSB4  ***********************************/
