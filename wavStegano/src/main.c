@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
 	if(extract) {
 		LOG("extract\n");
 		fileContainer_t payloadFile;
-		stegExtract(&carrierData, &payloadData, stegMode_LSB, payloadFile.extension);
+		stegExtract(&carrierData, &payloadData, stegMode_LSB4, payloadFile.extension);
 		payloadFile.rawData = payloadData.data;
 		payloadFile.size = payloadData.size;
 		FCWrite(argv[2], &payloadFile);
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]){
 		FCRead(argv[2], &payload);
 		LOG("payload.size = %d; payload.extention = %s\n", payload.size, payload.extension);
 		payloadData = newDataHolder((BYTE*) payload.rawData, payload.size);
-		stegEmbed(&carrierData, &payloadData, stegMode_LSB, payload.extension);
+		stegEmbed(&carrierData, &payloadData, stegMode_LSB4, payload.extension);
 		wav_t newCarrier = newWavFromData(wavGetFMT(wavCarrier), carrierData);
 		wavWriteToFile(newCarrier, argv[3]);
 	}
