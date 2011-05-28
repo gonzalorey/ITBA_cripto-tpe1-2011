@@ -13,9 +13,9 @@ int bitArrayGetDWORD(DWORD value, int idx);
 
 void bitArraySetBYTE(BYTE *value, int idx, int flag);
 
-int getFourLeastSignificantDWORD(DWORD value, int byte);
+int bitArrayGetFourLeastSignificantDWORD(DWORD value, int byte);
 
-int getFourMostSignificantDWORD(DWORD value, int byte);
+int bitArrayGetFourMostSignificantDWORD(DWORD value, int byte);
 
 int bitArrayGetFourLeastSignificant(BYTE * array, int byte);
 

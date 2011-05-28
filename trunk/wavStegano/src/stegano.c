@@ -43,6 +43,8 @@ static stegResult_t stegExtractLSB4(dataHolder_t *carrier, dataHolder_t *payload
 static void writePayloadSizeLSB4(BYTE *carrier, int size);
 static void writePayloadDataLSB4(BYTE *carrier, int offset, BYTE *payload, long bits);
 static int getPayloadSizeLSB4(BYTE *carrier);
+static int getPayloadDataLSB4(BYTE * carrier, BYTE ** payload, int offset, int size);
+static int getPayloadExtentionLSB4(BYTE * carrier, char ** extention, int offset);
 static char getByteLSB4(int *offset, BYTE *carrier);
 
 stegResult_t stegEmbed(dataHolder_t *carrier, dataHolder_t *payload, stegMode_t mode, char *extention) {
@@ -52,9 +54,11 @@ stegResult_t stegEmbed(dataHolder_t *carrier, dataHolder_t *payload, stegMode_t 
 		return stegEmbedLSB(carrier, payload, extention);
 		break;
 	case stegMode_LSB4:
-
+		return stegEmbedLSB4(carrier, payload, extention);
+		break;
 	case stegMode_LSBE:
 		return stegEmbedLSBEnhanced(carrier, payload, extention);
+		break;
 	}
 	return stegResult_fail;
 }
@@ -65,9 +69,11 @@ stegResult_t stegExtract(dataHolder_t *carrier, dataHolder_t *payload, stegMode_
 		return stegExtractLSB(carrier, payload, extention);
 		break;
 	case stegMode_LSB4:
+		return stegExtractLSB4(carrier, payload, extention);
+		break;
 	case stegMode_LSBE:
 		return stegExtractLSBEnhanced(carrier, payload, extention);
-
+		break;
 	}
 	return stegResult_fail;
 }
@@ -380,62 +386,46 @@ static stegResult_t stegEmbedLSB4(dataHolder_t *carrier, dataHolder_t *payload, 
 
 	writePayloadSizeLSB4(carrier->data, payload->size);
 
-	writePayloadDataLSB4(carrier->data, sizeof(DWORD)*BITS_PER_BYTE,  payload->data, bits);
+	writePayloadDataLSB4(carrier->data, sizeof(DWORD) * BITS_PER_BYTE / BITS_PER_LSB4,  payload->data, bits);
 
 	if(extention != NULL){
-		writePayloadDataLSB4(carrier->data, (sizeof(DWORD) + payload->size)*BITS_PER_BYTE,(BYTE*) extention, (strlen(extention)+1)*BITS_PER_BYTE);
+		writePayloadDataLSB4(carrier->data, (sizeof(DWORD) + payload->size) * BITS_PER_BYTE / BITS_PER_LSB4,(BYTE*) extention, (strlen(extention)+1)*BITS_PER_BYTE);
 	}
+
+	LOG("steg embed successful\n");
 
 	return stegResult_Success;
 }
 
 static stegResult_t stegExtractLSB4(dataHolder_t *carrier, dataHolder_t *payload, char *extention) {
-	int sizeOffset = BITS_PER_BYTE * sizeof(DWORD);
-		long i;
-		int size;
+	int sizeOffset;
+	int dataOffset;
+	int size;
 
+	LOG("reading payloadSize\n");
+	size = getPayloadSizeLSB4(carrier->data);
+	payload->size = size;
+	LOG("payload size: %d\n", size);
 
-		LOG("reading payloadSize\n");
-		size = getPayloadSizeLSB4(carrier->data);
-		payload->size = size;
-		LOG("payload size: %d\n", size);
+	LOG("reading payload data\n");
+	sizeOffset = sizeof(DWORD) * BITS_PER_BYTE / BITS_PER_LSB4;
+	if(getPayloadDataLSB4(carrier->data, &payload->data, sizeOffset, size) != stegResult_Success) {
+		return stegResult_memoryFail;
+	}
 
-		if ((payload->data = (BYTE*) malloc(size)) == NULL) {
-			return stegResult_memoryFail;
+	LOG("reading payload extention\n");
+	dataOffset = size * BITS_PER_BYTE / BITS_PER_LSB4;
+	if(extention != NULL) {
+		if(getPayloadExtentionLSB4(carrier->data, &extention, sizeOffset + dataOffset) != stegResult_Success){
+			free(payload->data);
+			payload->data = NULL;
+			return stegResult_fail;
 		}
+	}
 
-		for (i = 0; i < size ; i++) {
-			payload->data[i] <<= 4;
-			payload->data[i] |= bitArrayGetFourLeastSignificant(carrier->data[(i+sizeOffset)*BLOCK_SIZE+1], i);
-		}
+	LOG("steg extract successful\n");
 
-		if(extention != NULL){
-			int offset = (sizeof(DWORD)+payload->size)*BITS_PER_BYTE;
-			char val;
-			i = 0;
-			if((val = getByteLSB(&offset, carrier->data)) != '.'){
-				WARN("Looking for extention, but '.' is not there...\n");
-				free(payload->data);
-				payload->data = NULL;
-				return stegResult_fail;
-			} else {
-				extention[i++] = val;
-				do {
-					val = getByteLSB(&offset, carrier->data);
-					extention[i++] = val;
-				}while(val != 0 && i < MAX_FILE_EXTENTION);
-
-				if(val != 0){
-					WARN("Not found Null termination in extention\n");
-					free(payload->data);
-					payload->data = NULL;
-					return stegResult_fail;
-				}
-			}
-
-		}
-
-		return stegResult_Success;
+	return stegResult_Success;
 }
 
 static void writePayloadSizeLSB4(BYTE *carrier, int size){
@@ -448,20 +438,24 @@ static void writePayloadSizeLSB4(BYTE *carrier, int size){
 		carrier[(2*i)*BLOCK_SIZE+1] &= ~0xF;
 
 		// set the 4 least significant bits of the block with the four most significative from size
-		carrier[(2*i)*BLOCK_SIZE+1] |= getFourMostSignificantDWORD(size, i);
+		carrier[(2*i)*BLOCK_SIZE+1] |= bitArrayGetFourMostSignificantDWORD(size, sizeof(DWORD) - i - 1);
+
+		LOG("Most:%#02X - i:%d - offset:%d\n", bitArrayGetFourMostSignificantDWORD(size, sizeof(DWORD) - i - 1), (int)(sizeof(DWORD) -  i - 1), (2*i)*BLOCK_SIZE+1);
 
 		// clear the 4 least significant bits of the block
 		carrier[(2*i+1)*BLOCK_SIZE+1] &= ~0xF;
 
 		// set the 4 least significant bits of the block with the four least significative from size
-		carrier[(2*i+1)*BLOCK_SIZE+1] |= getFourLeastSignificantDWORD(size, i);
+		carrier[(2*i+1)*BLOCK_SIZE+1] |= bitArrayGetFourLeastSignificantDWORD(size, sizeof(DWORD) - i - 1);
+
+		LOG("Least:%#02X - i:%d - offset:%d\n", bitArrayGetFourLeastSignificantDWORD(size, sizeof(DWORD) - i - 1), (int)(sizeof(DWORD) -  i - 1), (2*i+1)*BLOCK_SIZE+1);
 	}
 }
 
 static void writePayloadDataLSB4(BYTE *carrier, int offset, BYTE *payload, long bits) {
 	LOG("writePayloadData(%p, %d, %p, %ld)\n", carrier, offset, payload, bits);
 	LOG("sizeOffset: %d\n", offset);
-	long i;
+	int i;
 
 	for (i = 0; i < bits / BITS_PER_BYTE; i++) {
 
@@ -469,13 +463,17 @@ static void writePayloadDataLSB4(BYTE *carrier, int offset, BYTE *payload, long 
 		carrier[((2*i)+offset)*BLOCK_SIZE+1] &= ~0xF;
 
 		// clear 4 most significant bits
-		carrier[((2*i)+offset)*BLOCK_SIZE+1] |= bitArrayGetFourMostSignificant(carrier, ((2*i)+offset)*BLOCK_SIZE+1);
+		carrier[((2*i)+offset)*BLOCK_SIZE+1] |= bitArrayGetFourMostSignificant(payload, i);
+		LOG("Most:%#02X - i:%d - offset:%d\n", bitArrayGetFourMostSignificant(payload, i), i, ((2*i)+offset)*BLOCK_SIZE+1);
 
 		// clear 4 least significant bits
 		carrier[((2*i+1)+offset)*BLOCK_SIZE+1] &= ~0xF;
 
 		// clear 4 most significant bits
-		carrier[((2*i+1)+offset)*BLOCK_SIZE+1] |= bitArrayGetFourLeastSignificant(carrier, ((2*i+1)+offset)*BLOCK_SIZE+1);
+		carrier[((2*i+1)+offset)*BLOCK_SIZE+1] |= bitArrayGetFourLeastSignificant(payload, i);
+		LOG("Least:%#02X - i:%d - offset:%d\n", bitArrayGetFourLeastSignificant(payload, i), i, ((2*i+1)+offset)*BLOCK_SIZE+1);
+
+		LOG("BYTE:%#02X (%c)\n", payload[i], payload[i]);
 	}
 }
 
@@ -484,23 +482,70 @@ static int getPayloadSizeLSB4(BYTE *carrier) {
 	int i;
 	unsigned int ret = 0;
 
-	for(i = 0 ; i < sizeof(DWORD); i++){
+	for(i = 0 ; i < sizeof(DWORD) * 2; i++){
 		ret <<= 4;
-		ret |= getFourLeastSignificantDWORD(carrier, i);
+		ret |= bitArrayGetFourLeastSignificant(carrier, i*BLOCK_SIZE+1);
+		//LOG("Least:%#02X - i:%d\n", bitArrayGetFourLeastSignificant(carrier, i*BLOCK_SIZE+1), i);
 	}
 
 	return ret;
 }
 
-static char getByteLSB4(int *offset, BYTE *carrier) {
-	char ret = 0;
-	int bits = sizeof(char)*BITS_PER_BYTE;
+static int getPayloadDataLSB4(BYTE * carrier, BYTE ** payload, int offset, int size) {
 	int i;
-	for(i = 0 ; i < bits ; i++){
-		if(carrier[(i+*offset)*BLOCK_SIZE+1] & 0x1){
-			bitArraySetBYTE((BYTE*)&ret, i, 1);
+
+	if ((*payload = (BYTE*) calloc(sizeof(BYTE), size)) == NULL) {
+		return stegResult_memoryFail;
+	}
+
+	for (i = 0; i < size ; i++) {
+		(*payload)[i] |= bitArrayGetFourLeastSignificant(carrier, (2*i + offset) * BLOCK_SIZE + 1);
+		LOG("Least:%#02X - i:%d - offset;%d\n", (int)bitArrayGetFourLeastSignificant(payload, i), i, (2*i + offset) * BLOCK_SIZE + 1);
+		(*payload)[i] <<= 4;
+		(*payload)[i] |= bitArrayGetFourLeastSignificant(carrier, (2*i+1 + offset) * BLOCK_SIZE + 1);
+		LOG("Least:%#02X - i:%d - offset;%d\n", (int)bitArrayGetFourLeastSignificant(payload, i), i, (2*i+1 + offset) * BLOCK_SIZE + 1);
+
+		LOG("BYTE:%#02X (%c)\n", (int)(*payload)[i], (*payload)[i]);
+	}
+
+	return stegResult_Success;
+}
+
+static int getPayloadExtentionLSB4(BYTE * carrier, char ** extention, int offset) {
+	int i = 0;
+	char val;
+
+	if((val = getByteLSB4(&offset, carrier)) != '.'){
+		WARN("Looking for extention, but '.' is not there...\n");
+		return stegResult_fail;
+	} else {
+		(*extention)[i++] = val;
+		do {
+			val = getByteLSB4(&offset, carrier);
+			(*extention)[i++] = val;
+		}while(val != 0 && i < MAX_FILE_EXTENTION);
+
+		if(val != 0){
+			WARN("Not found Null termination in extention\n");
+			return stegResult_fail;
 		}
 	}
-	*offset += i;
+
+	return stegResult_Success;
+}
+
+static char getByteLSB4(int *offset, BYTE *carrier) {
+	unsigned char ret = 0;
+
+	ret |= bitArrayGetFourLeastSignificant(carrier, *offset * BLOCK_SIZE + 1);
+	LOG("offset:%d\n", *offset * BLOCK_SIZE + 1);
+	ret <<= 4;
+	ret |= bitArrayGetFourLeastSignificant(carrier, (*offset + 1) * BLOCK_SIZE + 1);
+	LOG("offset:%d\n", (*offset + 1) * BLOCK_SIZE + 1);
+
+	*offset += 2;
+
+	LOG("ret:%#02X (%c)\n", ret, ret);
+
 	return ret;
 }
