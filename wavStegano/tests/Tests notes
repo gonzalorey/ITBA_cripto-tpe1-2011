@@ -1,0 +1,7 @@
+Realizé un par de pruebas con estos dos archivos, parado en el directorio en donde se encuentran
+
+../Debug/wavStegano do-si.wav hola.txt do-siSTEG.wav embed
+../Debug/wavStegano do-siSTEG.wav holaSTEG lala ext
+
+../Debug/wavStegano salida.wav chuck-norris.jpg salidaSTEG.wav embed
+../Debug/wavStegano salidaSTEG.wav chuckSTEG lala ext
