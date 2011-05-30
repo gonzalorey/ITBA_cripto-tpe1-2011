@@ -204,18 +204,19 @@ static stegResult_t stegEmbedLSBEnhanced(dataHolder_t *carrier, dataHolder_t *pa
 	int offset = 0;
 
 	if (!writePayloadSizeLSBEnhanced(carrier->data, &offset, carrier->size, payload->size)) {
-		ERROR("PayloadSize wrongly hidden!");
+		ERROR("PayloadSize wrongly hidden!\n");
 		return stegResult_sizeFail;
 	}
 
 	if (!writePayloadDataLSBEnhanced(carrier->data, &offset, carrier->size, payload->data, bits)) {
-		ERROR("PayloadData wrongly hidden!");
+		ERROR("PayloadData wrongly hidden!\n");
+		ERROR("The carrier could not have enough space for hidding the payload!\n");
 		return stegResult_fail;
 	}
 
 	if(extention != NULL) {
 		if(!writePayloadDataLSBEnhanced(carrier->data, &offset, carrier->size, (BYTE*) extention, (strlen(extention)+1)*BITS_PER_BYTE)) {
-			ERROR("Extention wrongly hidden!");
+			ERROR("Extention wrongly hidden!\n");
 			return stegResult_fail;
 		}
 	}
@@ -292,15 +293,12 @@ static stegResult_t	stegExtractLSBEnhanced(dataHolder_t *carrier, dataHolder_t *
 		return stegResult_memoryFail;
 	}
 
-	LOG("DATAAAA: %s\n", payload->data);
-
 	if(extention != NULL){
 		char val;
 		i = 0;
 		if((val = getByteLSBEnhanced(&offset, carrier)) != '.'){
 			WARN("Looking for extention, but '.' is not there...\n");
 			free(payload->data);
-			payload->data = NULL;
 			return stegResult_fail;
 		} else {
 			extention[i++] = val;
@@ -312,7 +310,6 @@ static stegResult_t	stegExtractLSBEnhanced(dataHolder_t *carrier, dataHolder_t *
 			if(val != 0){
 				WARN("Not found Null termination in extention\n");
 				free(payload->data);
-				payload->data = NULL;
 				return stegResult_fail;
 			}
 		}
@@ -366,8 +363,8 @@ static int writePayloadDataLSBEnhanced(BYTE *carrier, int * offset, int carrierS
 	}
 
 	if (i == carrierSize) {
-		/* El payload no entra en el carrie */
-		return 1;
+		/* El payload no entra en el carrier */
+		return 0;
 	}
 
 	*offset = i;
