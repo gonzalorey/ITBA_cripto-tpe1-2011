@@ -52,12 +52,11 @@ stegResult_t stegEmbed(dataHolder_t *carrier, dataHolder_t *payload, stegMode_t 
 	switch (mode) {
 	case stegMode_LSB:
 		return stegEmbedLSB(carrier, payload, extention);
-		break;
 	case stegMode_LSB4:
 		return stegEmbedLSB4(carrier, payload, extention);
-		break;
 	case stegMode_LSBE:
 		return stegEmbedLSBEnhanced(carrier, payload, extention);
+	case stegMode_none:
 		break;
 	}
 	return stegResult_fail;
@@ -73,6 +72,7 @@ stegResult_t stegExtract(dataHolder_t *carrier, dataHolder_t *payload, stegMode_
 		break;
 	case stegMode_LSBE:
 		return stegExtractLSBEnhanced(carrier, payload, extention);
+	case stegMode_none:
 		break;
 	}
 	return stegResult_fail;
