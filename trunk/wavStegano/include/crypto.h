@@ -7,11 +7,11 @@
 
 
 typedef enum {
-	algorithm_des, algorithm_aes128, algorithm_aes192, algorithm_aes256
+	algorithm_none = 0, algorithm_des, algorithm_aes128, algorithm_aes192, algorithm_aes256
 } algorithm_t;
 
 typedef enum {
-	ciphermode_ecb, ciphermode_cfb, ciphermode_ofb, ciphermode_cbc
+	ciphermode_none = 0, ciphermode_ecb, ciphermode_cfb, ciphermode_ofb, ciphermode_cbc
 } ciphermode_t;
 
 typedef enum {

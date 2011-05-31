@@ -5,7 +5,7 @@
 
 #include "dataHolder.h"
 
-typedef enum {stegMode_LSB, stegMode_LSB4, stegMode_LSBE} stegMode_t;
+typedef enum {stegMode_none = 0, stegMode_LSB, stegMode_LSB4, stegMode_LSBE} stegMode_t;
 typedef enum {stegResult_Success, stegResult_fail,  stegResult_memoryFail, stegResult_sizeFail} stegResult_t;
 
 stegResult_t stegEmbed(dataHolder_t *carrier, dataHolder_t *payload, stegMode_t mode, char *extention);
