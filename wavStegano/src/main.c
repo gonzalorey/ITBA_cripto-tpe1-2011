@@ -29,7 +29,8 @@ int main(int argc, char *argv[]){
 	wav_t carrierFile;
 	dataHolder_t carrierData;
 
-	showConfig(conf);
+	if(conf != NULL)
+		showConfig(conf);
 	checkConfig(&conf);
 	if(conf != NULL) {
 		LOG("opening carrier file: %s\n", conf->carrierFile);
@@ -104,13 +105,13 @@ configuration_t *clparser(int argc, char ** argv) {
 	setArg(parser, arg_in, "-in", 0, 1, ARG_TYPE1, 0, NULL);
 	setArg(parser, arg_out, "-out", 0, 1, ARG_TYPE1, 0, NULL);
 	setArg(parser, arg_porter, "-p", 0, 1, ARG_TYPE1, 0, NULL);
-	setArg(parser, arg_embed, "-embed", 0, 1, ARG_TYPE0, 0, NULL);
-	setArg(parser, arg_extract, "-extract", 0, 1, ARG_TYPE0, 0, NULL);
-	setArg(parser, arg_pass, "-pass", 0, 1, ARG_TYPE1, 0, NULL);
-	setArg(parser, arg_algorithm, "-a", 0, 1, ARG_TYPE1, SIZE_OF_ARRAY(aOpt), aOpt);
-	setArg(parser, arg_ciphermode, "-m", 0, 1, ARG_TYPE1, SIZE_OF_ARRAY(mOpt) , mOpt);
-	setArg(parser, arg_steg, "-steg", 0, 1, ARG_TYPE1, SIZE_OF_ARRAY(stegOpt), stegOpt);
-	setArg(parser, arg_help, "-h", 0, 1, ARG_TYPE0, 0, NULL); //help
+	setArg(parser, arg_embed, "-embed", 1, 1, ARG_TYPE0, 0, NULL);
+	setArg(parser, arg_extract, "-extract", 1, 1, ARG_TYPE0, 0, NULL);
+	setArg(parser, arg_pass, "-pass", 1, 1, ARG_TYPE1, 0, NULL);
+	setArg(parser, arg_algorithm, "-a", 1, 1, ARG_TYPE1, SIZE_OF_ARRAY(aOpt), aOpt);
+	setArg(parser, arg_ciphermode, "-m", 1, 1, ARG_TYPE1, SIZE_OF_ARRAY(mOpt) , mOpt);
+	setArg(parser, arg_steg, "-steg", 1, 1, ARG_TYPE1, SIZE_OF_ARRAY(stegOpt), stegOpt);
+	setArg(parser, arg_help, "-h", 1, 1, ARG_TYPE0, 0, NULL); //help
 
 	int error = 0;
 	while(!noMoreArgs(parser) && !error){
@@ -336,7 +337,7 @@ static void showHelp(){
 	printf("\t-out : target file, the carrier with the payload file.\n");
 	printf("\t-p : carrier file. The file that will hold the payload\n");
 	printf("\t-steg: hide method. LSB1, LSB4, LSBE\n");
-	printf("Encriptation:\n");
+	printf("\nEncriptation:\n");
 	printf("Default Algoritm is AES128 and Ciphermode is CBC\n");
 	printf("\t-pass specefies the password for use [MANDATORY]\n");
 	printf("\t-m specefies the ciphermode. CBC, ECB, OFB, CFB\n");
@@ -423,7 +424,8 @@ static void checkConfig(configuration_t **conf) {
 
 
 	if(*conf == NULL){
-		printf("configuration is null\n");
+		printf("Invalid configuration, use -h for see help\n");
+		return;
 	}
 
 	if((*conf)->embed == steg_notSet){
