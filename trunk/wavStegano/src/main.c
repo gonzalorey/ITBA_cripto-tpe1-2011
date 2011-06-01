@@ -51,7 +51,6 @@ int main(int argc, char *argv[]){
 			} else {
 				//Embeding with encryptation.
 				typeConvertFCtoDH(&payload, &payloadRawHolder);
-				resultPayload = payloadRawHolder;
 				crypto_Execute(*conf->encriptation, payloadRawHolder, &resultPayload);
 				ext = NULL;
 			}
@@ -73,6 +72,7 @@ int main(int argc, char *argv[]){
 				LOG("got payload file size: %d, and extention %s\n", resultPayloadFile.size, resultPayloadFile.extension);
 			} else {
 				//Extracting with decription
+				LOG("extrating with encryption\n");
 				dataHolder_t cipherPayload;
 				stegExtract(&carrierData, &cipherPayload, conf->stegMode, NULL);
 				crypto_Execute(*conf->encriptation, cipherPayload, &payloadData);
@@ -326,7 +326,22 @@ static stegMode_t getStegMode(char *value) {
 }
 
 static void showHelp(){
-	printf("showing help\n");
+	printf("wavStegano 1.0\n");
+	printf("Mangiarotti, Nizzo, Rey\n\n");
+	printf("Embeding:\n");
+	printf("\twavStegano -in <source> -out <target> -p <carrier> -steg <mode> -embed\n\n");
+	printf("Extracting:\n");
+	printf("\twavStegano -out <target> -p <carrier> -steg <mode> -extract\n\n");
+	printf("\t-in : payload file\n");
+	printf("\t-out : target file, the carrier with the payload file.\n");
+	printf("\t-p : carrier file. The file that will hold the payload\n");
+	printf("\t-steg: hide method. LSB1, LSB4, LSBE\n");
+	printf("Encriptation:\n");
+	printf("Default Algoritm is AES128 and Ciphermode is CBC\n");
+	printf("\t-pass specefies the password for use [MANDATORY]\n");
+	printf("\t-m specefies the ciphermode. CBC, ECB, OFB, CFB\n");
+	printf("\t-a specefies the algorithm. AES128, AES192, AES256, DES\n");
+
 }
 
 static void showConfig(configuration_t *conf) {
