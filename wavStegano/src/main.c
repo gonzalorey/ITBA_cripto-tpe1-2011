@@ -83,6 +83,8 @@ int main(int argc, char *argv[]){
 			FCWrite(conf->targetFile, &resultPayloadFile);
 		}
 
+	} else {
+		printf("user -h for help\n");
 	}
 
 	return 0;
