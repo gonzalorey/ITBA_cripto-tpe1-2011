@@ -104,6 +104,7 @@ static stegResult_t stegExtractLSB(dataHolder_t *carrier, dataHolder_t *payload,
 	LOG("reading payloadSize\n");
 	size = getPayloadSizeLSB(carrier->data);
 	payload->size = size;
+	printf("payload size is %d\n", payload->size);
 	LOG("payload size: %d\n", size);
 
 	if ((payload->data = (BYTE*) malloc(size)) == NULL) {
@@ -240,6 +241,7 @@ static int getPayloadSizeEnhanced(dataHolder_t *carrier, int * offset) {
 
 	*offset = i;
 	LOG("ret: %d\n", ret);
+	printf("payload size is %d\n", ret);
 	return ret;
 }
 
@@ -402,6 +404,7 @@ static stegResult_t stegExtractLSB4(dataHolder_t *carrier, dataHolder_t *payload
 	LOG("reading payloadSize\n");
 	size = getPayloadSizeLSB4(carrier->data);
 	payload->size = size;
+	printf("payload size is %d\n", payload->size);
 	LOG("payload size: %d\n", size);
 
 	LOG("reading payload data\n");
