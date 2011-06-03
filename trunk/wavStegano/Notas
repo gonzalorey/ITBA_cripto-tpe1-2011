@@ -55,3 +55,10 @@ int main(int argc, char *argv[]){
 ------------------------------------------------------------------------------------------------
 
 donde sizeEncrypt es el tamanio total de los datos encriptados...>>>>>>> .r63
+
+
+
+
+2d se extrae con steg LSB 1
+2b se extrae con steg LSBE
+ 
