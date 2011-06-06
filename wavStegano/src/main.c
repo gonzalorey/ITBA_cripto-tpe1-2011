@@ -76,6 +76,7 @@ int main(int argc, char *argv[]){
 				LOG("extrating with encryption\n");
 				dataHolder_t cipherPayload;
 				stegExtract(&carrierData, &cipherPayload, conf->stegMode, NULL);
+				LOG("extracted cipherPayload({%d,%p})\n",cipherPayload.size, cipherPayload.data);
 				crypto_Execute(*conf->encriptation, cipherPayload, &payloadData);
 				typeConvertDHtoFC(&resultPayloadFile, &payloadData);
 			}
@@ -95,7 +96,7 @@ configuration_t *clparser(int argc, char ** argv) {
 	configuration_t *conf;
 	char *aOpt[] = {"aes128", "aes192", "aes256", "des"};
 	char *mOpt[] = {"ecb", "cfb", "ofb", "cbc"};
-	char *stegOpt[] = {"LSB1", "LSB4", "LSBE"};
+	char *stegOpt[] = {"LSB1", "LSB4", "LSBE", "WANTED"};
 
 
 	if((conf = calloc(sizeof(configuration_t),1)) == NULL){
@@ -208,8 +209,11 @@ configuration_t *clparser(int argc, char ** argv) {
 			showHelp();
 			return NULL;
 			break;
-
+		default:
+			error = 1;
+			break;
 		}
+
 	}
 
 	return conf;
@@ -319,7 +323,12 @@ static stegMode_t getStegMode(char *value) {
 				LOG("steg mode is LSBE\n");
 				mode = stegMode_LSBE;
 			} else {
-				LOG("steg mode is none");
+				if(!strcmp(value,  "WANTED")){
+					LOG("steg mode is WANTED\n");
+					mode = stegMode_Wanted;
+				} else {
+					LOG("steg mode is none");
+				}
 			}
 		}
 	}
@@ -383,6 +392,8 @@ static char *getStegModeStr(stegMode_t mode){
 		return "stegMode_lsbe";
 	case stegMode_none:
 		return "stegMode_none";
+	case stegMode_Wanted:
+		return "stegMode_Wanted";
 	}
 	return "stegMode_wtf?";
 }
