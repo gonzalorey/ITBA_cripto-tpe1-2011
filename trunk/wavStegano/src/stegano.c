@@ -7,7 +7,7 @@
 #include "stegano.h"
 #include "bitArray.h"
 
-#define DEBUG_WARN
+#define DEBUG_LOG
 #include "debug.h"
 
 #include "macros.h"
@@ -56,6 +56,8 @@ stegResult_t stegEmbed(dataHolder_t *carrier, dataHolder_t *payload, stegMode_t 
 		return stegEmbedLSB4(carrier, payload, extention);
 	case stegMode_LSBE:
 		return stegEmbedLSBEnhanced(carrier, payload, extention);
+	case stegMode_Wanted:
+		printf("Not implemented\n");
 	case stegMode_none:
 		break;
 	}
@@ -72,6 +74,7 @@ stegResult_t stegExtract(dataHolder_t *carrier, dataHolder_t *payload, stegMode_
 		break;
 	case stegMode_LSBE:
 		return stegExtractLSBEnhanced(carrier, payload, extention);
+	case stegMode_Wanted:
 	case stegMode_none:
 		break;
 	}
@@ -500,10 +503,10 @@ static int getPayloadDataLSB4(BYTE * carrier, BYTE ** payload, int offset, int s
 
 	for (i = 0; i < size ; i++) {
 		(*payload)[i] |= bitArrayGetFourLeastSignificant(carrier, (2*i + offset) * BLOCK_SIZE + 1);
-		LOG("Least:%#02X - i:%d - offset;%d\n", (int)bitArrayGetFourLeastSignificant(payload, i), i, (2*i + offset) * BLOCK_SIZE + 1);
+		//LOG("Least:%#02X - i:%d - offset;%d\n", (int)bitArrayGetFourLeastSignificant(payload, i), i, (2*i + offset) * BLOCK_SIZE + 1);
 		(*payload)[i] <<= 4;
 		(*payload)[i] |= bitArrayGetFourLeastSignificant(carrier, (2*i+1 + offset) * BLOCK_SIZE + 1);
-		LOG("Least:%#02X - i:%d - offset;%d\n", (int)bitArrayGetFourLeastSignificant(payload, i), i, (2*i+1 + offset) * BLOCK_SIZE + 1);
+		//LOG("Least:%#02X - i:%d - offset;%d\n", (int)bitArrayGetFourLeastSignificant(payload, i), i, (2*i+1 + offset) * BLOCK_SIZE + 1);
 
 		LOG("BYTE:%#02X (%c)\n", (int)(*payload)[i], (*payload)[i]);
 	}

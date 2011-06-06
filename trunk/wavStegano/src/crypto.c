@@ -269,6 +269,10 @@ static const EVP_CIPHER *getChiper(algorithm_t algorithm,
 	case ciphermode_ofb:
 		return modes[3]();
 		break;
+	case ciphermode_none:
+		printf("There is not ciphermode selected\n");
+		return NULL;
+		break;
 	}
 	return EVP_enc_null(); //NO hacer nada
 }
