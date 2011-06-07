@@ -4,7 +4,7 @@
 #include "types.h"
 #include "typeConverter.h"
 
-#define DEBUG_LOG
+#define DEBUG_WARN
 #include "debug.h"
 
 void reverseInt(intConvert_t *number);
