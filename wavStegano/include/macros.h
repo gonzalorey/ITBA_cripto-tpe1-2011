@@ -14,6 +14,6 @@
 
 #define STR_NULL(x) (((x) == NULL)? "(null)" : (x))
 
-#define SIZE_OF_ARRAY(x) (sizeof(x)/sizeof(void*))
+#define SIZE_OF_ARRAY(x) (sizeof(x)/sizeof(x[0]))
 
 #endif /* MACROS_H_ */

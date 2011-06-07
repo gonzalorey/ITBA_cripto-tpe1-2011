@@ -20,6 +20,9 @@ typedef int (*fncFinal_t)(EVP_CIPHER_CTX*, unsigned char *, int *);
 
 static const EVP_CIPHER *getChiper(algorithm_t algorithm, ciphermode_t cipher);
 
+static void printHexa(unsigned char *bytes, int len);
+
+
 typedef const EVP_CIPHER* (*fncCipher_t)(void);
 
 // Mode          cbc    cfb64   ecb    ofb
@@ -34,6 +37,31 @@ const static fncCipher_t ciphers[4][4] =
 		{	EVP_aes_128_cbc, EVP_aes_128_cfb8, EVP_aes_128_ecb, EVP_aes_128_ofb },
 		{   EVP_aes_192_cbc, EVP_aes_192_cfb8, EVP_aes_192_ecb, EVP_aes_192_ofb },
 		{   EVP_aes_256_cbc, EVP_aes_256_cfb8, EVP_aes_256_ecb, EVP_aes_256_ofb } };
+
+
+typedef struct {
+	char name[40];
+	fncCipher_t fnc;
+} CipherName_t;
+
+CipherName_t ciphersByName[] = {{"EVP_des_cbc", EVP_des_cbc},{"EVP_des_cfb8", EVP_des_cfb8}, {"EVP_des_ecb", EVP_des_ecb},{"EVP_des_ofb", EVP_des_ofb},
+								{"EVP_aes_128_ecb", EVP_aes_128_cbc}, {"EVP_aes_128_cfb8", EVP_aes_128_cfb8},{"EVP_aes_128_ecb", EVP_aes_128_ecb}, {"EVP_aes_128_ofb", EVP_aes_128_ofb},
+								{"EVP_aes_192_cbc", EVP_aes_192_cbc}, {"EVP_aes_192_cfb8", EVP_aes_192_cfb8}, {"EVP_aes_192_ecb", EVP_aes_192_ecb}, {"EVP_aes_192_ofb", EVP_aes_192_ofb},
+								{"EVP_aes_256_cbc", EVP_aes_256_cbc}, {"EVP_aes_256_cfb8", EVP_aes_256_cfb8}, {"EVP_aes_256_ecb", EVP_aes_256_ecb}, {"EVP_aes_256_ofb", EVP_aes_256_ofb},
+								{"EVP_enc_null", EVP_enc_null}};
+
+static void printCipherName(fncCipher_t cipher){
+	int i;
+
+	for(i = 0 ; i < SIZE_OF_ARRAY(ciphersByName) ; i++){
+		if(ciphersByName[i].fnc() == cipher){
+			printf("Cipher is %s\n", ciphersByName[i].name);
+			return;
+		}
+	}
+
+	printf("Cipher not found\n");
+}
 
 encryption_t newEncryptation() {
 	encryption_t enc;
@@ -166,6 +194,7 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 		memcpy(iv, encryptation.passKeyIv.keyIv.iv, LOWER(EVP_MAX_IV_LENGTH, ivlen));
 	} else {
 		LOG("Generating key and iv from password\n");
+		printCipherName(getChiper(encryptation.algorithm, encryptation.ciphermode));
 		EVP_BytesToKey(getChiper(encryptation.algorithm, encryptation.ciphermode), EVP_md5(), NULL, encryptation.passKeyIv.password, strlen((char*)encryptation.passKeyIv.password),1, key, iv);
 	}
 
@@ -182,11 +211,17 @@ int crypto_Execute(encryption_t encryptation, dataHolder_t source,
 		fncFinal = EVP_DecryptFinal_ex;
 	}
 
+
+	printf("%s\n", encryptation.passKeyIv.password);
+	printf("%d\n", ctx.key_len);
+
+
 	//Do what we came for
 	LOG("Init process\n");
 	fncInit(&ctx, getChiper(encryptation.algorithm, encryptation.ciphermode), NULL,
 			key, iv);
 	//EVP_CIPHER_CTX_set_padding(&ctx, 0);
+
 	LOG("Update process\n");
 	fncUpdate(&ctx, (unsigned char *) target->data, &target->size, source.data,
 			source.size);
@@ -275,4 +310,14 @@ static const EVP_CIPHER *getChiper(algorithm_t algorithm,
 		break;
 	}
 	return EVP_enc_null(); //NO hacer nada
+}
+
+static void printHexa(unsigned char *bytes, int len){
+	int i;
+
+	for(i = 0 ; i < len ; i++){
+		printf("%02x ", bytes[i]);
+	}
+
+	putchar('\n');
 }

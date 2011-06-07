@@ -16,4 +16,9 @@ typedef DWORD FOURCC; //Four-character code
 typedef FOURCC CKID;	//Four-character-code chunk identifier
 typedef DWORD CKSIZE; //32-bit unsigned size value
 
+typedef union {
+	char bytes[4];
+	int number;
+} intConvert_t;
+
 #endif /* TYPES_H_ */

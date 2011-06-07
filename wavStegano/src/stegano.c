@@ -83,6 +83,11 @@ stegResult_t stegExtract(dataHolder_t *carrier, dataHolder_t *payload, stegMode_
 
 static stegResult_t stegEmbedLSB(dataHolder_t *carrier, dataHolder_t *payload, char *extention) {
 
+	if((payload->size+ MAX_FILE_EXTENTION)*BITS_PER_BYTE*BLOCK_SIZE > carrier->size){
+		printf("Payload can't be hold in the carrier. Carrier too small\n");
+		return stegResult_fail;
+	}
+
 	LOG("stegEmbedLSB((%p, %d), (%p, %d), %s)\n", carrier->data, carrier->size, payload->data, payload->size, STR_NULL(extention));
 	long bits = BITS_PER_BYTE*payload->size;
 	LOG("data bits: %ld\n", bits);
@@ -386,6 +391,13 @@ static stegResult_t stegEmbedLSB4(dataHolder_t *carrier, dataHolder_t *payload, 
 	long bits = BITS_PER_BYTE*payload->size;
 	LOG("data bits: %ld\n", bits);
 
+
+	if((payload->size+ MAX_FILE_EXTENTION)*BITS_PER_BYTE/BITS_PER_LSB4*BLOCK_SIZE > carrier->size){
+		printf("Payload can't be hold in the carrier. Carrier too small\n");
+		return stegResult_fail;
+	}
+
+
 	writePayloadSizeLSB4(carrier->data, payload->size);
 
 	writePayloadDataLSB4(carrier->data, sizeof(DWORD) * BITS_PER_BYTE / BITS_PER_LSB4,  payload->data, bits);
@@ -467,16 +479,16 @@ static void writePayloadDataLSB4(BYTE *carrier, int offset, BYTE *payload, long 
 
 		// clear 4 most significant bits
 		carrier[((2*i)+offset)*BLOCK_SIZE+1] |= bitArrayGetFourMostSignificant(payload, i);
-		LOG("Most:%#02X - i:%d - offset:%d\n", bitArrayGetFourMostSignificant(payload, i), i, ((2*i)+offset)*BLOCK_SIZE+1);
+		//LOG("Most:%#02X - i:%d - offset:%d\n", bitArrayGetFourMostSignificant(payload, i), i, ((2*i)+offset)*BLOCK_SIZE+1);
 
 		// clear 4 least significant bits
 		carrier[((2*i+1)+offset)*BLOCK_SIZE+1] &= ~0xF;
 
 		// clear 4 most significant bits
 		carrier[((2*i+1)+offset)*BLOCK_SIZE+1] |= bitArrayGetFourLeastSignificant(payload, i);
-		LOG("Least:%#02X - i:%d - offset:%d\n", bitArrayGetFourLeastSignificant(payload, i), i, ((2*i+1)+offset)*BLOCK_SIZE+1);
+		//LOG("Least:%#02X - i:%d - offset:%d\n", bitArrayGetFourLeastSignificant(payload, i), i, ((2*i+1)+offset)*BLOCK_SIZE+1);
 
-		LOG("BYTE:%#02X (%c)\n", payload[i], payload[i]);
+		//LOG("BYTE:%#02X (%c)\n", payload[i], payload[i]);
 	}
 }
 
@@ -508,7 +520,7 @@ static int getPayloadDataLSB4(BYTE * carrier, BYTE ** payload, int offset, int s
 		(*payload)[i] |= bitArrayGetFourLeastSignificant(carrier, (2*i+1 + offset) * BLOCK_SIZE + 1);
 		//LOG("Least:%#02X - i:%d - offset;%d\n", (int)bitArrayGetFourLeastSignificant(payload, i), i, (2*i+1 + offset) * BLOCK_SIZE + 1);
 
-		LOG("BYTE:%#02X (%c)\n", (int)(*payload)[i], (*payload)[i]);
+		//LOG("BYTE:%#02X (%c)\n", (int)(*payload)[i], (*payload)[i]);
 	}
 
 	return stegResult_Success;
