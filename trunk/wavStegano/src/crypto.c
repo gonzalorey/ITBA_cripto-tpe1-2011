@@ -6,7 +6,7 @@
 #include <openssl/evp.h>
 #include "macros.h"
 
-#define DEBUG_LOG
+#define DEBUG_WARN
 #include "debug.h"
 
 #define EMPTY -1
@@ -19,9 +19,6 @@ typedef int (*fncUpdate_t)(EVP_CIPHER_CTX*, unsigned char *, int *,
 typedef int (*fncFinal_t)(EVP_CIPHER_CTX*, unsigned char *, int *);
 
 static const EVP_CIPHER *getChiper(algorithm_t algorithm, ciphermode_t cipher);
-
-static void printHexa(unsigned char *bytes, int len);
-
 
 typedef const EVP_CIPHER* (*fncCipher_t)(void);
 
@@ -50,7 +47,7 @@ CipherName_t ciphersByName[] = {{"EVP_des_cbc", EVP_des_cbc},{"EVP_des_cfb8", EV
 								{"EVP_aes_256_cbc", EVP_aes_256_cbc}, {"EVP_aes_256_cfb8", EVP_aes_256_cfb8}, {"EVP_aes_256_ecb", EVP_aes_256_ecb}, {"EVP_aes_256_ofb", EVP_aes_256_ofb},
 								{"EVP_enc_null", EVP_enc_null}};
 
-static void printCipherName(fncCipher_t cipher){
+static void printCipherName(const EVP_CIPHER *cipher){
 	int i;
 
 	for(i = 0 ; i < SIZE_OF_ARRAY(ciphersByName) ; i++){
@@ -310,14 +307,4 @@ static const EVP_CIPHER *getChiper(algorithm_t algorithm,
 		break;
 	}
 	return EVP_enc_null(); //NO hacer nada
-}
-
-static void printHexa(unsigned char *bytes, int len){
-	int i;
-
-	for(i = 0 ; i < len ; i++){
-		printf("%02x ", bytes[i]);
-	}
-
-	putchar('\n');
 }
